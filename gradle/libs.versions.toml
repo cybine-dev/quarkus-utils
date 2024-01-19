@@ -1,0 +1,10 @@
+[versions]
+quarkus = "3.6.6"
+
+[libraries]
+quarkus-bom = { group = "io.quarkus.platform", name = "quarkus-bom", version.ref = "quarkus" }
+uuid-generator = { group = "com.fasterxml.uuid", name = "java-uuid-generator", version = "4.1.0" }
+
+[plugins]
+quarkus = { id = "io.quarkus.extension", version.ref = "quarkus" }
+lombok = { id = "io.freefair.lombok", version = "8.4" }
