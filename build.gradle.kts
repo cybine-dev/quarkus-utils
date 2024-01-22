@@ -50,11 +50,13 @@ subprojects {
 
         repositories {
             maven {
-                val releasesRepoUrl = "https://nexus.cybine.de/repository/maven-releases/"
-                val snapshotsRepoUrl = "https://nexus.cybine.de/repository/maven-snapshots/"
+                val releasesRepoUrl = "https://repository.cybine.de/repository/maven-releases/"
+                val snapshotsRepoUrl = "https://repository.cybine.de/repository/maven-snapshots/"
 
-                name = "cybine-nexus"
-                url = uri(if (project.hasProperty("release")) releasesRepoUrl else snapshotsRepoUrl)
+                val isSnapshot = (project.version as String).endsWith("-SNAPSHOT")
+
+                name = "cybine"
+                url = uri(if (isSnapshot) snapshotsRepoUrl else releasesRepoUrl)
             }
         }
     }
