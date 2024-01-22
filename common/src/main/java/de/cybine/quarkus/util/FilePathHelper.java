@@ -16,10 +16,13 @@ public class FilePathHelper
     {
         if (path.startsWith("%resources%/"))
         {
-            URL resourceUrl = FilePathHelper.class.getClassLoader().getResource(path.replace("%resources%/", ""));
+            URL resourceUrl = Thread.currentThread()
+                                    .getContextClassLoader()
+                                    .getResource(path.replace("%resources%/", ""));
+
             if (resourceUrl == null)
             {
-                log.warn("Cloud not find resource-path '{}'. Please consider configuring custom a path.", path);
+                log.warn("Cloud not find resource-path '{}'. Please consider configuring a custom path.", path);
                 return Optional.empty();
             }
 
