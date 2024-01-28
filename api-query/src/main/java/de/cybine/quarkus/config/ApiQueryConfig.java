@@ -11,6 +11,7 @@ public interface ApiQueryConfig
      *
      */
     @WithDefault("false")
+    @WithName("allow-multi-level-relations")
     boolean allowMultiLevelRelations( );
 
     /**
