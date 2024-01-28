@@ -1,6 +1,7 @@
 package de.cybine.quarkus.util.api.query;
 
 import com.fasterxml.jackson.annotation.*;
+import io.quarkus.arc.*;
 import jakarta.enterprise.context.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -9,6 +10,7 @@ import lombok.experimental.*;
 import java.util.*;
 
 @Data
+@Unremovable
 @RequestScoped
 public class ApiPaginationInfo
 {
