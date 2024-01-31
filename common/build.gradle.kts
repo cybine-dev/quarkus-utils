@@ -7,4 +7,6 @@ dependencies {
 
     implementation("io.quarkus:quarkus-core")
     implementation("io.quarkus:quarkus-jackson")
+
+    implementation(libs.uuid.generator)
 }
