@@ -9,6 +9,8 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/action-processor" />
+            <option value="$PROJECT_DIR$/action-processor-deployment" />
             <option value="$PROJECT_DIR$/api-query" />
             <option value="$PROJECT_DIR$/api-query-deployment" />
             <option value="$PROJECT_DIR$/common" />
