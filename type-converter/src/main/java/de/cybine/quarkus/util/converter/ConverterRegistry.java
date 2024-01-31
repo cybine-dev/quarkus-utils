@@ -1,13 +1,18 @@
 package de.cybine.quarkus.util.converter;
 
+import de.cybine.quarkus.config.*;
 import jakarta.inject.*;
+import lombok.*;
 
 import java.util.*;
 
 @Singleton
 @SuppressWarnings("unused")
+@RequiredArgsConstructor
 public class ConverterRegistry
 {
+    private final TypeConverterConfig config;
+
     private final Map<ConverterType<?, ?>, Converter<?, ?>> converters = new HashMap<>();
 
     /**
@@ -50,7 +55,7 @@ public class ConverterRegistry
      */
     public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType)
     {
-        return this.getProcessor(inputType, outputType, ConverterTree.create());
+        return this.getProcessor(inputType, outputType, ConverterTree.create(this.getDefaultConstraint()));
     }
 
     /**
@@ -78,5 +83,15 @@ public class ConverterRegistry
     private <I, O> Converter<I, O> getConverter(ConverterType<I, O> type)
     {
         return (Converter<I, O>) this.converters.get(type);
+    }
+
+    public ConverterConstraint getDefaultConstraint( )
+    {
+        return ConverterConstraint.builder()
+                                  .maxDepth(this.config.maxDepth())
+                                  .filterNullValues(this.config.filterNullValues())
+                                  .allowEmptyCollection(this.config.allowEmptyCollections())
+                                  .duplicatePolicy(this.config.duplicatePolicy())
+                                  .build();
     }
 }

@@ -32,7 +32,7 @@ public class ConverterTree
     private ConverterTree(ConverterConstraint constraint, @Singular Map<Type, ConverterConstraint> typeConstraints,
             @Singular List<ConverterKeyMapper<?, ?>> keyMappers)
     {
-        this.constraint = constraint != null ? constraint : ConverterConstraint.create();
+        this.constraint = constraint != null ? constraint : ConverterConstraint.builder().build();
         this.typeConstraints = new HashMap<>(typeConstraints);
 
         ConverterTreeNode rootNode = ConverterTreeNode.builder()
@@ -135,8 +135,8 @@ public class ConverterTree
         this.treeNodes.put(node.getId(), node);
     }
 
-    public static ConverterTree create( )
+    public static ConverterTree create(ConverterConstraint constraint)
     {
-        return ConverterTree.builder().build();
+        return ConverterTree.builder().constraint(constraint).build();
     }
 }
