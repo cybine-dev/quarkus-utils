@@ -1,6 +1,8 @@
 package de.cybine.quarkus.util.converter;
 
 import com.fasterxml.jackson.annotation.*;
+import de.cybine.quarkus.config.*;
+import io.quarkus.arc.*;
 import lombok.*;
 
 import java.util.*;
@@ -71,12 +73,14 @@ public class ConverterConstraint
 
     public static ConverterConstraint create( )
     {
+        TypeConverterConfig config = Arc.container().select(TypeConverterConfig.class).get();
+
         return ConverterConstraint.builder()
-                .maxDepth(5)
-                .filterNullValues(true)
-                .allowEmptyCollection(false)
-                .duplicatePolicy(DuplicatePolicy.IGNORE_ALL)
-                .build();
+                                  .maxDepth(config.maxDepth())
+                                  .filterNullValues(config.filterNullValues())
+                                  .allowEmptyCollection(config.allowEmptyCollections())
+                                  .duplicatePolicy(config.duplicatePolicy())
+                                  .build();
     }
 
     /**

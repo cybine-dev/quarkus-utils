@@ -1,5 +1,6 @@
 package de.cybine.quarkus.util.converter.deployment;
 
+import de.cybine.quarkus.config.*;
 import de.cybine.quarkus.util.converter.*;
 import io.quarkus.arc.deployment.*;
 import io.quarkus.deployment.annotations.*;
@@ -13,6 +14,12 @@ public class ConverterExtensionProcessor
     public FeatureBuildItem feature( )
     {
         return new FeatureBuildItem(FEATURE);
+    }
+
+    @BuildStep
+    public AdditionalBeanBuildItem createConverterConfig( )
+    {
+        return new AdditionalBeanBuildItem(TypeConverterConfig.class);
     }
 
     @BuildStep
