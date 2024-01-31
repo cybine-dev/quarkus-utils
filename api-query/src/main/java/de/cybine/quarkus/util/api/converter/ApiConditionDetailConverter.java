@@ -3,6 +3,7 @@ package de.cybine.quarkus.util.api.converter;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import de.cybine.quarkus.exception.converter.*;
+import de.cybine.quarkus.util.*;
 import de.cybine.quarkus.util.api.query.*;
 import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.datasource.*;

@@ -1,4 +1,4 @@
-package de.cybine.quarkus.util.datasource;
+package de.cybine.quarkus.util;
 
 /**
  * <p>API-specific interface to map a given input value to another datasource value</p>
