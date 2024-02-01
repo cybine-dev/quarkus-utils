@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(platform(libs.quarkus.bom))
 
+    implementation(project(":datasource-query"))
     implementation(project(":type-converter-deployment"))
     implementation("io.quarkus:quarkus-core-deployment")
     implementation("io.quarkus:quarkus-hibernate-orm-deployment")
