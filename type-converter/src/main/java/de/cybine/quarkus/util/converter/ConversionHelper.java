@@ -364,14 +364,14 @@ public class ConversionHelper
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean isInitialized(Object input)
     {
-
         try
         {
             Method getPersistenceUtil = Class.forName("jakarta.persistence.Persistence")
                                              .getMethod("getPersistenceUtil");
 
+            Method isLoaded = Class.forName("jakarta.persistence.PersistenceUtil").getMethod("isLoaded", Object.class);
+
             Object persistenceUtil = getPersistenceUtil.invoke(null);
-            Method isLoaded = persistenceUtil.getClass().getMethod("isLoaded", Object.class);
 
             return (boolean) isLoaded.invoke(persistenceUtil, input);
         }
