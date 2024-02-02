@@ -1,7 +1,6 @@
 plugins {
     id("maven-publish")
     id("java-library")
-    id("org.hibernate.build.maven-repo-auth")
 }
 
 subprojects {
@@ -10,7 +9,6 @@ subprojects {
 
     apply<JavaLibraryPlugin>()
     apply<MavenPublishPlugin>()
-    apply(plugin = "org.hibernate.build.maven-repo-auth")
 
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
@@ -57,6 +55,8 @@ subprojects {
 
                 name = "cybine"
                 url = uri(if (isSnapshot) snapshotsRepoUrl else releasesRepoUrl)
+
+                credentials(PasswordCredentials::class)
             }
         }
     }
