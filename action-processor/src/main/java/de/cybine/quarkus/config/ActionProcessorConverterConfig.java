@@ -12,11 +12,9 @@ public class ActionProcessorConverterConfig
 {
     private final ConverterRegistry registry;
 
-    private final ActionProcessorConfig config;
-
     @PostConstruct
     void setup()
     {
-        this.registry.addConverter(new CloudEventConverter(this.config));
+        this.registry.addConverter(new CloudEventConverter());
     }
 }

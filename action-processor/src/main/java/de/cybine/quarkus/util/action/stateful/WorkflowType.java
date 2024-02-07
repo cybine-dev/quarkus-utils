@@ -1,4 +1,4 @@
-package de.cybine.quarkus.data.action.metadata;
+package de.cybine.quarkus.util.action.stateful;
 
 import de.cybine.quarkus.util.*;
 import lombok.*;
@@ -7,7 +7,7 @@ import java.util.*;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum ActionType implements WithDatasourceKey<String>
+public enum WorkflowType implements WithDatasourceKey<String>
 {
     UPDATE("update", true), ACTION("action", false), LOG("log", false);
 
@@ -21,11 +21,11 @@ public enum ActionType implements WithDatasourceKey<String>
         return this.getName();
     }
 
-    public static Optional<ActionType> findByName(String name)
+    public static Optional<WorkflowType> findByName(String name)
     {
         if (name == null)
             return Optional.empty();
 
-        return Arrays.stream(ActionType.values()).filter(item -> item.getName().equals(name)).findAny();
+        return Arrays.stream(WorkflowType.values()).filter(item -> item.getName().equals(name)).findAny();
     }
 }

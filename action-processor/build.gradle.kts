@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.lombok)
     alias(libs.plugins.quarkus)
+    alias(libs.plugins.jandex)
 }
 
 quarkusExtension {

@@ -6,5 +6,6 @@ quarkus-bom = { group = "io.quarkus.platform", name = "quarkus-bom", version.ref
 uuid-generator = { group = "com.fasterxml.uuid", name = "java-uuid-generator", version = "4.1.0" }
 
 [plugins]
+jandex = { id = "org.kordamp.gradle.jandex", version = "1.1.0" }
 quarkus = { id = "io.quarkus.extension", version.ref = "quarkus" }
 lombok = { id = "io.freefair.lombok", version = "8.4" }
