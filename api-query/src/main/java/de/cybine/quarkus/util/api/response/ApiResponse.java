@@ -37,6 +37,14 @@ public class ApiResponse<T>
         return Optional.ofNullable(this.self);
     }
 
+    public Optional<List<ApiError>> getErrors( )
+    {
+        if(this.errors == null || this.errors.isEmpty())
+            return Optional.empty();
+
+        return Optional.of(this.errors);
+    }
+
     @JsonIgnore
     public ResponseBuilder<ApiResponse<T>> toResponseBuilder( )
     {

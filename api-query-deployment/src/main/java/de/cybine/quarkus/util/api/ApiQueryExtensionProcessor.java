@@ -6,6 +6,7 @@ import de.cybine.quarkus.util.api.query.*;
 import io.quarkus.arc.deployment.*;
 import io.quarkus.deployment.annotations.*;
 import io.quarkus.deployment.builditem.*;
+import io.quarkus.resteasy.reactive.spi.*;
 
 public class ApiQueryExtensionProcessor
 {
@@ -30,9 +31,15 @@ public class ApiQueryExtensionProcessor
     }
 
     @BuildStep
-    public AdditionalBeanBuildItem createResourceDataEnhancer( )
+    public CustomContainerRequestFilterBuildItem createRequestDataEnhancer( )
     {
-        return new AdditionalBeanBuildItem(ResourceDataEnhancer.class);
+        return new CustomContainerRequestFilterBuildItem(ResourceDataEnhancer.class.getName());
+    }
+
+    @BuildStep
+    public CustomContainerResponseFilterBuildItem createResponseDataEnhancer( )
+    {
+        return new CustomContainerResponseFilterBuildItem(ResourceDataEnhancer.class.getName());
     }
 
     @BuildStep

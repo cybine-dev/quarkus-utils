@@ -1,7 +1,6 @@
 package de.cybine.quarkus.config;
 
 import de.cybine.quarkus.api.response.*;
-import de.cybine.quarkus.util.api.permission.*;
 import de.cybine.quarkus.util.api.query.*;
 import de.cybine.quarkus.util.api.response.*;
 import io.smallrye.config.common.utils.*;
@@ -13,7 +12,6 @@ import lombok.*;
 import org.jboss.resteasy.reactive.*;
 import org.jboss.resteasy.reactive.server.*;
 
-import java.lang.reflect.*;
 import java.util.*;
 
 @Singleton
@@ -29,27 +27,20 @@ public class ResourceDataEnhancer
     @ServerRequestFilter
     public Optional<RestResponse<Void>> enhanceRequest(ContainerRequestContext context)
     {
-        Method resourceMethod = this.resourceInfo.getResourceMethod();
-        if (resourceMethod.isAnnotationPresent(ApiAction.class))
-        {
-            String action = resourceMethod.getAnnotation(ApiAction.class).value();
-            // TODO: check permission
-        }
-
         try
         {
             MultivaluedMap<String, String> queryParameters = context.getUriInfo().getQueryParameters();
             String size = queryParameters.getFirst("size");
-            if (StringUtil.isNumeric(size))
+            if (size != null && StringUtil.isNumeric(size))
                 this.paginationInfo.setSize(Integer.valueOf(size));
 
             String offset = queryParameters.getFirst("offset");
-            if (StringUtil.isNumeric(offset))
+            if (offset != null && StringUtil.isNumeric(offset))
                 this.paginationInfo.setOffset(Integer.valueOf(offset));
 
             String includeTotal = queryParameters.getFirst("total");
             if (includeTotal != null)
-                this.paginationInfo.includeTotal(includeTotal.equals("true"));
+                this.paginationInfo.includeTotal(includeTotal.equalsIgnoreCase("true"));
         }
         catch (NumberFormatException ignored)
         {
