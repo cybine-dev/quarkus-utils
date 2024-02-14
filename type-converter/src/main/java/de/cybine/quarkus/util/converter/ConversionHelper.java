@@ -42,6 +42,25 @@ public class ConversionHelper
     }
 
     /**
+     * Updates context information
+     *
+     * @param property
+     *         name of the context information
+     * @param update
+     *         update function
+     * @param <T>
+     *         type of the context information
+     *
+     * @return current helper instance
+     */
+    @SuppressWarnings("unchecked")
+    public <T> ConversionHelper updateContext(String property, UnaryOperator<T> update)
+    {
+        this.context.put(property, update.apply((T) this.context.get(property)));
+        return this;
+    }
+
+    /**
      * Search for context information
      *
      * @param property

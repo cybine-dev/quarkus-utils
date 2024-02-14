@@ -27,4 +27,10 @@ public class ApiFieldConfig
     @Singular
     @JsonProperty("capabilities")
     private final List<ApiCapability> capabilities;
+
+    @JsonIgnore
+    public boolean isUnavailable( )
+    {
+        return !this.isAvailable;
+    }
 }

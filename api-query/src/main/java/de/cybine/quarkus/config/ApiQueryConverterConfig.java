@@ -1,6 +1,5 @@
 package de.cybine.quarkus.config;
 
-import com.fasterxml.jackson.databind.*;
 import de.cybine.quarkus.util.api.converter.*;
 import de.cybine.quarkus.util.converter.*;
 import io.quarkus.runtime.*;
@@ -13,13 +12,12 @@ public class ApiQueryConverterConfig
 {
     private final ConverterRegistry registry;
 
-    private final ObjectMapper   objectMapper;
     private final ApiQueryConfig config;
 
     @PostConstruct
     public void setup( )
     {
-        this.registry.addConverter(new ApiConditionDetailConverter(this.objectMapper));
+        this.registry.addConverter(new ApiConditionDetailConverter());
         this.registry.addConverter(new ApiConditionInfoConverter());
         this.registry.addConverter(new ApiCountQueryConverter());
         this.registry.addConverter(new ApiCountRelationConverter());

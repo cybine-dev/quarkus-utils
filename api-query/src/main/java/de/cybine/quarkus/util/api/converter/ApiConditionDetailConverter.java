@@ -2,8 +2,10 @@ package de.cybine.quarkus.util.api.converter;
 
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
+import de.cybine.quarkus.exception.api.*;
 import de.cybine.quarkus.exception.converter.*;
 import de.cybine.quarkus.util.*;
+import de.cybine.quarkus.util.api.*;
 import de.cybine.quarkus.util.api.query.*;
 import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.datasource.*;
@@ -16,8 +18,6 @@ import java.util.*;
 @SuppressWarnings("rawtypes")
 public class ApiConditionDetailConverter implements Converter<ApiConditionDetail, DatasourceConditionDetail>
 {
-    private final ObjectMapper objectMapper;
-
     @Override
     public Class<ApiConditionDetail> getInputType( )
     {
@@ -34,26 +34,39 @@ public class ApiConditionDetailConverter implements Converter<ApiConditionDetail
     @SuppressWarnings("unchecked")
     public DatasourceConditionDetail convert(ApiConditionDetail input, ConversionHelper helper)
     {
+        int steps = input.getProperty().split("\\.").length;
+        helper.updateContext(ApiQueryConverter.FIELD_PATH_PROPERTY,
+                path -> String.format("%s.%s", path, input.getProperty()));
 
         Type type = input.getType();
-        Object value = input.getValue().orElse(null);
-        DatasourceFieldPath fieldPath = ApiQueryConverter.getFieldPathOrThrow(helper, input.getProperty());
+        ApiFieldPath path = ApiQueryConverter.getFieldPathOrThrow(helper);
         DatasourceConditionDetail.Generator builder = DatasourceConditionDetail.builder()
-                                                                               .property(fieldPath.asString())
+                                                                               .property(
+                                                                                       path.toDatasourceFieldPath(steps)
+                                                                                           .asString())
                                                                                .type(type);
 
+        // TODO: Update to use Scopes
+        ApiField field = path.getLast();
+        ApiFieldResolverContext context = helper.getContextOrThrow(ApiQueryConverter.CONTEXT_PROPERTY);
+        if (!context.hasAnyCapability(field.getObjectType(), ApiQuery.SEARCH_CAPABILITY, field.getName()))
+            throw new MissingCapabilityException(String.format("Cannot search for '%s'", path.asString())).addData(
+                    "path", path.asString());
+
+        Object value = input.getValue().orElse(null);
         if (value == null)
             return builder.build();
 
         try
         {
-            DatasourceField field = fieldPath.getLast();
+            DatasourceField datasourceField = field.getDatasourceField();
 
-            JavaType itemType = field.getItemType();
+            JavaType itemType = datasourceField.getItemType();
+            ObjectMapper mapper = helper.getContextOrThrow(ApiQueryConverter.OBJECT_MAPPER_PROPERTY);
             if (type.requiresIterable())
-                itemType = this.objectMapper.getTypeFactory().constructCollectionType(List.class, field.getItemType());
+                itemType = mapper.getTypeFactory().constructCollectionType(List.class, datasourceField.getItemType());
 
-            value = this.objectMapper.readValue(this.objectMapper.writeValueAsString(value), itemType);
+            value = mapper.readValue(mapper.writeValueAsString(value), itemType);
             if (value instanceof WithDatasourceKey<?> datasourceKey)
                 value = datasourceKey.getDatasourceKey();
 

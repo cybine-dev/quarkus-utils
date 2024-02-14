@@ -2,19 +2,19 @@ package de.cybine.quarkus.util.api.converter;
 
 import de.cybine.quarkus.exception.*;
 import de.cybine.quarkus.exception.api.*;
-import de.cybine.quarkus.exception.datasource.*;
 import de.cybine.quarkus.util.api.*;
 import de.cybine.quarkus.util.api.query.*;
 import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.datasource.*;
-import io.quarkus.arc.*;
 
 import java.lang.reflect.*;
 
 public class ApiQueryConverter implements Converter<ApiQuery, DatasourceQuery>
 {
-    public static final String CONTEXT_PROPERTY   = "context";
-    public static final String DATA_TYPE_PROPERTY = "data-type";
+    public static final String CONTEXT_PROPERTY       = "context";
+    public static final String ROOT_TYPE_PROPERTY     = "root-type";
+    public static final String FIELD_PATH_PROPERTY    = "field-path";
+    public static final String OBJECT_MAPPER_PROPERTY = "object-mapper";
 
     @Override
     public Class<ApiQuery> getInputType( )
@@ -43,24 +43,25 @@ public class ApiQueryConverter implements Converter<ApiQuery, DatasourceQuery>
                               .build();
     }
 
-    static DatasourceFieldPath getFieldPathOrThrow(ConversionHelper helper, String name)
+    static ApiFieldPath getFieldPathOrThrow(ConversionHelper helper)
     {
-        if (name == null)
-            throw new UnknownRelationException("No field name specified");
+        return getFieldPathOrThrow(helper, null);
+    }
 
-        String contextName = helper.getContextOrThrow(ApiQueryConverter.CONTEXT_PROPERTY);
-        ServiceException unknownContextError = new UnknownApiContextException("Unable to find context").addData(
-                ApiQueryConverter.CONTEXT_PROPERTY, contextName);
+    static ApiFieldPath getFieldPathOrThrow(ConversionHelper helper, String fieldName)
+    {
+        Type rootType = helper.getContextOrThrow(ApiQueryConverter.ROOT_TYPE_PROPERTY);
+        ApiFieldResolverContext context = helper.getContextOrThrow(ApiQueryConverter.CONTEXT_PROPERTY);
 
-        ApiFieldResolver resolver = Arc.container().select(ApiFieldResolver.class).get();
-        ApiFieldResolverContext context = resolver.findContext(contextName).orElseThrow(( ) -> unknownContextError);
+        String fieldPath = helper.getContextOrThrow(ApiQueryConverter.FIELD_PATH_PROPERTY);
+        if (fieldName != null && !fieldName.isBlank())
+            fieldPath = String.format("%s.%s", fieldPath, fieldName);
 
-        Class<?> type = helper.getContextOrThrow(ApiQueryConverter.DATA_TYPE_PROPERTY);
-        Type dataType = resolver.findRepresentationType(type).orElse(type);
+        ServiceException unknownFieldError = new UnknownApiContextException("Unable to find field");
+        unknownFieldError.addData("name", fieldPath)
+                         .addData("type", rootType.getTypeName())
+                         .addData(ApiQueryConverter.CONTEXT_PROPERTY, context.getContextName());
 
-        ServiceException unknownFieldError = new UnknownApiContextException("Unable to find field").addData("name",
-                name).addData("type", dataType.getTypeName()).addData(ApiQueryConverter.CONTEXT_PROPERTY, contextName);
-
-        return context.findField(dataType, name).orElseThrow(( ) -> unknownFieldError);
+        return context.findField(rootType, fieldPath).orElseThrow(( ) -> unknownFieldError);
     }
 }
