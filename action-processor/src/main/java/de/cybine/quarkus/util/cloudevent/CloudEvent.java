@@ -2,7 +2,7 @@ package de.cybine.quarkus.util.cloudevent;
 
 import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.databind.annotation.*;
-import de.cybine.quarkus.service.action.data.*;
+import de.cybine.quarkus.util.action.data.*;
 import jakarta.validation.*;
 import lombok.*;
 import lombok.extern.jackson.*;

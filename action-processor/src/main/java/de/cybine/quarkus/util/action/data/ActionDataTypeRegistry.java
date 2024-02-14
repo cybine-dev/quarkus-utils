@@ -1,4 +1,4 @@
-package de.cybine.quarkus.service.action.data;
+package de.cybine.quarkus.util.action.data;
 
 import com.fasterxml.jackson.databind.*;
 import jakarta.annotation.*;

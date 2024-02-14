@@ -1,8 +1,8 @@
 package de.cybine.quarkus.util.action.deployment;
 
 import de.cybine.quarkus.config.*;
-import de.cybine.quarkus.service.action.*;
-import de.cybine.quarkus.service.action.data.*;
+import de.cybine.quarkus.util.action.data.*;
+import de.cybine.quarkus.util.action.stateless.*;
 import io.quarkus.arc.deployment.*;
 import io.quarkus.deployment.annotations.*;
 import io.quarkus.deployment.builditem.*;
@@ -18,12 +18,6 @@ public class ActionProcessorExtensionProcessor
     }
 
     @BuildStep
-    public AdditionalBeanBuildItem createActionConfig()
-    {
-        return new AdditionalBeanBuildItem(ActionProcessorConfig.class);
-    }
-
-    @BuildStep
     public AdditionalBeanBuildItem createDataTypeRegistry()
     {
         return new AdditionalBeanBuildItem(ActionDataTypeRegistry.class);
@@ -32,6 +26,12 @@ public class ActionProcessorExtensionProcessor
     @BuildStep
     public AdditionalBeanBuildItem createProcessorRegistry()
     {
-        return new AdditionalBeanBuildItem(ActionProcessorRegistry.class);
+        return new AdditionalBeanBuildItem(GenericStatelessActionService.class);
+    }
+
+    @BuildStep
+    public AdditionalBeanBuildItem createConverterConfig()
+    {
+        return new AdditionalBeanBuildItem(ActionProcessorConverterConfig.class);
     }
 }

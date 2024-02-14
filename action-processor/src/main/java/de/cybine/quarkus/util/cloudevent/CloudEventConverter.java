@@ -1,22 +1,18 @@
 package de.cybine.quarkus.util.cloudevent;
 
-import de.cybine.quarkus.config.*;
-import de.cybine.quarkus.data.action.context.*;
-import de.cybine.quarkus.data.action.metadata.*;
-import de.cybine.quarkus.data.action.process.*;
+import de.cybine.quarkus.util.action.data.*;
+import de.cybine.quarkus.util.cloudevent.CloudEvent.*;
 import de.cybine.quarkus.util.converter.*;
 import jakarta.ws.rs.core.*;
 import lombok.*;
 
 @RequiredArgsConstructor
-public class CloudEventConverter implements Converter<ActionProcess, CloudEvent>
+public class CloudEventConverter implements Converter<Action, CloudEvent>
 {
-    private final ActionProcessorConfig config;
-
     @Override
-    public Class<ActionProcess> getInputType( )
+    public Class<Action> getInputType( )
     {
-        return ActionProcess.class;
+        return Action.class;
     }
 
     @Override
@@ -26,20 +22,16 @@ public class CloudEventConverter implements Converter<ActionProcess, CloudEvent>
     }
 
     @Override
-    public CloudEvent convert(ActionProcess input, ConversionHelper helper)
+    public CloudEvent convert(Action input, ConversionHelper helper)
     {
-        ActionContext context = input.getContext().orElseThrow();
-        ActionMetadata metadata = context.getMetadata().orElseThrow();
-
-        CloudEvent.Generator builder = CloudEvent.builder()
-                                                 .id(input.getEventId())
-                                                 .type(String.format("%s:%s:%s:%s", metadata.getNamespace(),
-                                                         metadata.getCategory(), metadata.getName(), input.getStatus()))
-                                                 .subject(context.getItemId().orElse(null))
-                                                 .source(this.config.emitterId())
-                                                 .time(input.getCreatedAt())
-                                                 .correlationId(context.getCorrelationId())
-                                                 .priority(input.getPriority().orElse(null));
+        Generator builder = CloudEvent.builder()
+                                      .id(input.getEventId())
+                                      .type(input.toShortForm())
+                                      .subject(input.getItemId().orElse(null))
+                                      .source(input.getSource().orElse(null))
+                                      .time(input.getCreatedAt().orElse(null))
+                                      .correlationId(input.getCorrelationId().orElse(null))
+                                      .priority(input.getPriority().orElse(null));
 
         input.getData().ifPresent(data -> builder.contentType(MediaType.APPLICATION_JSON).data(data));
 
