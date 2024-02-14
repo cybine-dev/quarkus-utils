@@ -13,6 +13,10 @@ import java.util.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApiQuery
 {
+    public static final String SEARCH_CAPABILITY = "query:search";
+    public static final String GROUP_CAPABILITY = "query:group_by";
+    public static final String ORDER_CAPABILITY = "query:order";
+
     @Valid
     @JsonProperty("pagination")
     private final ApiPaginationInfo pagination;

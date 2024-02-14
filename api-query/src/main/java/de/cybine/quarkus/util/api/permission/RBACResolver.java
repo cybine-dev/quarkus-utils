@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.*;
 import de.cybine.quarkus.config.*;
 import de.cybine.quarkus.exception.*;
 import de.cybine.quarkus.util.*;
-import io.quarkus.arc.*;
 import io.quarkus.security.identity.*;
 import io.smallrye.mutiny.*;
 import jakarta.annotation.*;
@@ -23,6 +22,8 @@ public class RBACResolver
 {
     private final ObjectMapper   objectMapper;
     private final ApiQueryConfig apiQueryConfig;
+
+    private final SecurityIdentity identity;
 
     private final Map<String, RBACRole> roles = new HashMap<>();
 
@@ -69,12 +70,12 @@ public class RBACResolver
                        .anyMatch(item -> item.hasPermission(permission.getName()));
     }
 
+    @SuppressWarnings("unused")
     public PermissionChecker toPermissionChecker( )
     {
-        SecurityIdentity securityIdentity = Arc.container().select(SecurityIdentity.class).get();
         return permission -> Uni.createFrom()
-                                .item(securityIdentity.getRoles()
-                                                      .stream()
-                                                      .anyMatch(item -> this.hasPermission(item, permission)));
+                                .item(this.identity.getRoles()
+                                                   .stream()
+                                                   .anyMatch(item -> this.hasPermission(item, permission)));
     }
 }

@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.*;
 import de.cybine.quarkus.config.*;
 import de.cybine.quarkus.util.*;
 import de.cybine.quarkus.util.api.permission.*;
-import de.cybine.quarkus.util.datasource.*;
+import io.quarkus.arc.*;
 import io.quarkus.security.identity.*;
 import jakarta.annotation.*;
+import jakarta.enterprise.context.*;
+import jakarta.enterprise.inject.*;
 import jakarta.inject.*;
 import lombok.*;
 import lombok.extern.slf4j.*;
@@ -19,6 +21,7 @@ import java.util.*;
 @Slf4j
 @Singleton
 @RequiredArgsConstructor
+@SuppressWarnings("unused")
 public class ApiFieldResolver
 {
     public static final String DEFAULT_CONTEXT = "default";
@@ -27,9 +30,8 @@ public class ApiFieldResolver
     private final SecurityIdentity securityIdentity;
     private final ApiQueryConfig   apiQueryConfig;
 
-    private final Map<String, ApiFieldResolverContext> contexts = new HashMap<>();
-
-    private final Map<BiTuple<Type, String>, DatasourceField> fields = new HashMap<>();
+    private final List<ApiField>                fields   = new ArrayList<>();
+    private final List<ApiFieldResolverContext> contexts = new ArrayList<>();
 
     private final Map<Type, Type> representationTypes = new HashMap<>();
 
@@ -43,16 +45,36 @@ public class ApiFieldResolver
                                               .orElse(null);
 
         this.permissionConfig = ApiPermissionConfig.builder().build();
-        if(permissionJson != null)
+        if (permissionJson != null)
             this.permissionConfig = this.objectMapper.readValue(permissionJson, ApiPermissionConfig.class);
 
+        List<ApiTypeMapping> typeMappings = this.permissionConfig.getTypeMappings().orElse(Collections.emptyList());
+
         this.contexts.clear();
-        for (ApiContextConfig context : this.permissionConfig.getContexts().orElse(Collections.emptyList()))
-            log.debug("Registering api-context {}", this.getContext(context.getName()).getContextName());
+        this.contexts.add(new ApiFieldResolverContext(DEFAULT_CONTEXT, ( ) -> Collections.unmodifiableList(this.fields),
+                this.permissionConfig.getAvailableActions().orElse(Collections.emptyList()),
+                this.permissionConfig.getCapabilities().orElse(Collections.emptyList()),
+                this.permissionConfig.getTypes().orElse(Collections.emptyList()), typeMappings));
+
+        for (ApiContextConfig config : this.permissionConfig.getContexts().orElse(Collections.emptyList()))
+        {
+            log.debug("Registering api-context {}...", config.getName());
+            this.contexts.add(
+                    new ApiFieldResolverContext(config.getName(), ( ) -> Collections.unmodifiableList(this.fields),
+                            config.getAvailableActions(), config.getCapabilities(), config.getTypes(), typeMappings));
+        }
     }
 
+    @Produces
+    @DefaultBean
+    @Unremovable
+    @RequestScoped
+    @SneakyThrows
     public ApiFieldResolverContext getUserContext( )
     {
+        if (this.securityIdentity == null)
+            return this.getDefaultContext();
+
         return this.permissionConfig.getContextMappings()
                                     .orElse(Collections.emptyList())
                                     .stream()
@@ -67,38 +89,17 @@ public class ApiFieldResolver
 
     public ApiFieldResolverContext getDefaultContext( )
     {
-        return this.getContext(ApiFieldResolver.DEFAULT_CONTEXT);
-    }
-
-    public ApiFieldResolverContext getContext(String name)
-    {
-        return this.contexts.computeIfAbsent(name,
-                context -> new ApiFieldResolverContext(context, this.fields::get, new ArrayList<>(), new ArrayList<>(),
-                        new ArrayList<>(), new HashMap<>()));
+        return this.findContext(ApiFieldResolver.DEFAULT_CONTEXT).orElseThrow();
     }
 
     public Optional<ApiFieldResolverContext> findContext(String context)
     {
-        return Optional.ofNullable(this.contexts.get(context));
+        return this.contexts.stream().filter(item -> item.getContextName().equals(context)).findAny();
     }
 
-    public ApiFieldResolver registerField(Type dataType, String alias, DatasourceField field)
+    public ApiFieldResolverHelper registerType(Type representationType)
     {
-        log.debug("Registering api-field: {}({})", dataType.getTypeName(), alias);
-
-        this.fields.put(new BiTuple<>(this.findRepresentationType(dataType).orElse(dataType), alias), field);
-        return this;
-    }
-
-    public ApiFieldResolverHelper registerTypeRepresentation(Type representationType, Type datasourceType)
-    {
-        this.representationTypes.put(representationType, datasourceType);
-        return this.getTypeRepresentationHelper(representationType);
-    }
-
-    public ApiFieldResolverHelper getTypeRepresentationHelper(Type representationType)
-    {
-        return new ApiFieldResolverHelper(this, representationType);
+        return new ApiFieldResolverHelper(this, representationType, this.representationTypes::put, this.fields::add);
     }
 
     public Optional<Type> findRepresentationType(Type type)
