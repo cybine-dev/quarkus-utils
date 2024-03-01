@@ -83,9 +83,7 @@ public class ConverterTreeNode
             }
 
             if (type == null || type == node.itemType)
-            {
                 depth++;
-            }
 
             node = node.getParentNodeId().map(this.tree::getNodeOrThrow).orElse(null);
         }
@@ -96,40 +94,25 @@ public class ConverterTreeNode
     public boolean hasBeenProcessed(Object item)
     {
         if (item == null)
-        {
-            throw new IllegalArgumentException("Item cannot be null");
-        }
+            throw new IllegalArgumentException("Item must not be null");
 
         Object objectId = this.tree.findItemId(item).orElse(null);
         if (objectId == null)
-        {
             return false;
-        }
 
         return this.hasBeenProcessed(item.getClass(), objectId);
     }
 
     private boolean hasBeenProcessed(Type type, Object itemId)
     {
-        if (type == null)
-        {
-            throw new IllegalArgumentException("Type cannot be null");
-        }
-
-        if (itemId == null)
-        {
-            throw new IllegalArgumentException("ItemId cannot be null");
-        }
+        assert type != null : "No type provided";
+        assert itemId != null : "No itemId provided";
 
         if (this.itemType == type && Objects.equals(this.itemId, itemId))
-        {
             return true;
-        }
 
         if (this.parentNodeId == null)
-        {
             return false;
-        }
 
         return this.tree.getNodeOrThrow(this.parentNodeId).hasBeenProcessed(type, itemId);
     }
@@ -138,9 +121,7 @@ public class ConverterTreeNode
     {
         int generalMaxDepth = this.getConstraint().getMaxDepth().orElse(Integer.MAX_VALUE);
         if (this.getDepth() >= generalMaxDepth)
-        {
             return false;
-        }
 
         return this.getDepth(type) < this.getConstraint(type).getMaxDepth().orElse(generalMaxDepth);
     }
@@ -148,15 +129,11 @@ public class ConverterTreeNode
     public boolean shouldBeProcessed(Object obj)
     {
         if (obj == null)
-        {
             return false;
-        }
 
         ConverterConstraint constraint = this.getConstraint();
         if (this.getDepth() >= constraint.getMaxDepth().orElse(Integer.MAX_VALUE))
-        {
             return false;
-        }
 
         DuplicatePolicy generalDuplicatePolicy = constraint.getDuplicatePolicy().orElse(DuplicatePolicy.IGNORE_ALL);
         if (obj instanceof Collection<?> collection)
@@ -164,36 +141,25 @@ public class ConverterTreeNode
             ConverterConstraint typeConstraint = this.getConstraint(
                     collection.stream().filter(Objects::nonNull).map(Object::getClass).findAny().orElse(null));
 
-            switch (typeConstraint.getDuplicatePolicy().orElse(generalDuplicatePolicy))
+            return switch (typeConstraint.getDuplicatePolicy().orElse(generalDuplicatePolicy))
             {
                 case IGNORE_ALL ->
-                {
-                    return collection.parallelStream().filter(Objects::nonNull).noneMatch(this::hasBeenProcessed);
-                }
+                        collection.parallelStream().filter(Objects::nonNull).noneMatch(this::hasBeenProcessed);
 
                 case IGNORE_ITEM ->
-                {
-                    return !collection.parallelStream().filter(Objects::nonNull).allMatch(this::hasBeenProcessed);
-                }
+                        !collection.parallelStream().filter(Objects::nonNull).allMatch(this::hasBeenProcessed);
 
-                case PROCESS ->
-                {
-                    return true;
-                }
-            }
+                case PROCESS -> true;
+            };
         }
 
         if (!this.shouldBeProcessed(obj.getClass()))
-        {
             return false;
-        }
 
         if (this.getConstraint(obj.getClass())
                 .getDuplicatePolicy()
                 .orElse(generalDuplicatePolicy) == DuplicatePolicy.PROCESS)
-        {
             return true;
-        }
 
         return !this.hasBeenProcessed(obj);
     }
@@ -201,9 +167,7 @@ public class ConverterTreeNode
     public Optional<ConverterTreeNode> process(Object item)
     {
         if (!this.shouldBeProcessed(item))
-        {
             return Optional.empty();
-        }
 
         return Optional.of(this.forceProcess(item));
     }
@@ -211,9 +175,7 @@ public class ConverterTreeNode
     public ConverterTreeNode forceProcess(Object item)
     {
         if (item == null)
-        {
             throw new IllegalArgumentException("Item cannot be null");
-        }
 
         ConverterTreeNode node = ConverterTreeNode.builder()
                                                   .tree(this.tree)

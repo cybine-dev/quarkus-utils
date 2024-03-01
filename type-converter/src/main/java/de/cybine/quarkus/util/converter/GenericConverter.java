@@ -17,6 +17,9 @@ public class GenericConverter<I, O> implements Converter<I, O>
     @Override
     public O convert(I input, ConversionHelper helper)
     {
+        if(helper == null)
+            throw new IllegalArgumentException("No helper provided");
+
         return this.conversionFunction.apply(input, helper);
     }
 }

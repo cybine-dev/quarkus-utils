@@ -1,5 +1,6 @@
 package de.cybine.quarkus.util.converter;
 
+import de.cybine.quarkus.exception.converter.*;
 import lombok.*;
 
 import java.lang.reflect.*;
@@ -19,6 +20,12 @@ import java.util.stream.*;
 @SuppressWarnings("unused")
 public class ConversionHelper
 {
+    private static final String INPUT_TYPE_NOT_NULL  = "Input type must not be null";
+    private static final String OUTPUT_TYPE_NOT_NULL = "Output type must not be null";
+    private static final String CONVERTER_NOT_NULL   = "Converter must not be null";
+    private static final String SUPPLIER_NOT_NULL    = "Value supplier must not be null";
+    private static final String PROPERTY_NOT_NULL    = "Property name must not be null";
+
     private final ConverterTreeNode parentNode;
 
     private final ConverterResolver converterResolver;
@@ -37,6 +44,9 @@ public class ConversionHelper
      */
     public ConversionHelper withContext(String property, Object value)
     {
+        if (property == null)
+            throw new IllegalArgumentException(PROPERTY_NOT_NULL);
+
         this.context.put(property, value);
         return this;
     }
@@ -56,6 +66,12 @@ public class ConversionHelper
     @SuppressWarnings("unchecked")
     public <T> ConversionHelper updateContext(String property, UnaryOperator<T> update)
     {
+        if (property == null)
+            throw new IllegalArgumentException(PROPERTY_NOT_NULL);
+
+        if (update == null)
+            throw new IllegalArgumentException("Update operator must not be null");
+
         this.context.put(property, update.apply((T) this.context.get(property)));
         return this;
     }
@@ -73,6 +89,9 @@ public class ConversionHelper
     @SuppressWarnings("unchecked")
     public <T> Optional<T> findContext(String property)
     {
+        if (property == null)
+            throw new IllegalArgumentException(PROPERTY_NOT_NULL);
+
         return Optional.ofNullable((T) this.context.get(property));
     }
 
@@ -88,6 +107,9 @@ public class ConversionHelper
      */
     public <T> T getContextOrThrow(String property)
     {
+        if (property == null)
+            throw new IllegalArgumentException(PROPERTY_NOT_NULL);
+
         return this.<T>findContext(property).orElseThrow();
     }
 
@@ -96,6 +118,9 @@ public class ConversionHelper
      */
     public <T> T proxyRelation(Supplier<T> input)
     {
+        if (input == null)
+            throw new IllegalArgumentException(SUPPLIER_NOT_NULL);
+
         return this.proxyRelation(input.get());
     }
 
@@ -112,9 +137,7 @@ public class ConversionHelper
     public <T> T proxyRelation(T input)
     {
         if (!this.isInitialized(input))
-        {
             return null;
-        }
 
         return input;
     }
@@ -127,6 +150,9 @@ public class ConversionHelper
      */
     public <T> Optional<T> optional(Supplier<T> input)
     {
+        if (input == null)
+            throw new IllegalArgumentException(SUPPLIER_NOT_NULL);
+
         return this.optional(input.get());
     }
 
@@ -159,6 +185,12 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<I, O> toItem(Class<I> inputType, Class<O> outputType)
     {
+        if (inputType == null)
+            throw new IllegalArgumentException(INPUT_TYPE_NOT_NULL);
+
+        if (outputType == null)
+            throw new IllegalArgumentException(OUTPUT_TYPE_NOT_NULL);
+
         Converter<I, O> converter = this.getConverter(inputType, outputType);
         return this.toItem(converter);
     }
@@ -179,6 +211,9 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<I, O> toItem(Converter<I, O> converter)
     {
+        if (converter == null)
+            throw new IllegalArgumentException(CONVERTER_NOT_NULL);
+
         return input ->
         {
             if (!this.isInitialized(input))
@@ -213,6 +248,12 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<Collection<I>, List<O>> toList(Class<I> inputType, Class<O> outputType)
     {
+        if (inputType == null)
+            throw new IllegalArgumentException(INPUT_TYPE_NOT_NULL);
+
+        if (outputType == null)
+            throw new IllegalArgumentException(OUTPUT_TYPE_NOT_NULL);
+
         Converter<I, O> converter = this.getConverter(inputType, outputType);
         return this.toList(converter);
     }
@@ -236,6 +277,9 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<Collection<I>, List<O>> toList(Converter<I, O> converter)
     {
+        if (converter == null)
+            throw new IllegalArgumentException(CONVERTER_NOT_NULL);
+
         return this.toCollection(converter, Collections.emptyList(), Collectors.toList());
     }
 
@@ -260,6 +304,12 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<Collection<I>, Set<O>> toSet(Class<I> inputType, Class<O> outputType)
     {
+        if (inputType == null)
+            throw new IllegalArgumentException(INPUT_TYPE_NOT_NULL);
+
+        if (outputType == null)
+            throw new IllegalArgumentException(OUTPUT_TYPE_NOT_NULL);
+
         Converter<I, O> converter = this.getConverter(inputType, outputType);
         return this.toSet(converter);
     }
@@ -283,6 +333,9 @@ public class ConversionHelper
      */
     public <I, O> ConverterFunction<Collection<I>, Set<O>> toSet(Converter<I, O> converter)
     {
+        if (converter == null)
+            throw new IllegalArgumentException(CONVERTER_NOT_NULL);
+
         return this.toCollection(converter, Collections.emptySet(), Collectors.toSet());
     }
 
@@ -309,6 +362,12 @@ public class ConversionHelper
     public <I, O, C extends Collection<O>> ConverterFunction<Collection<I>, C> toCollection(Class<I> inputType,
             Class<O> outputType, C defaultValue, Collector<O, ?, C> collector)
     {
+        if (inputType == null)
+            throw new IllegalArgumentException(INPUT_TYPE_NOT_NULL);
+
+        if (outputType == null)
+            throw new IllegalArgumentException(OUTPUT_TYPE_NOT_NULL);
+
         Converter<I, O> converter = this.getConverter(inputType, outputType);
         return this.toCollection(converter, defaultValue, collector);
     }
@@ -334,6 +393,12 @@ public class ConversionHelper
     public <I, O, C extends Collection<O>> ConverterFunction<Collection<I>, C> toCollection(Converter<I, O> converter,
             C defaultValue, Collector<O, ?, C> collector)
     {
+        if (converter == null)
+            throw new IllegalArgumentException(CONVERTER_NOT_NULL);
+
+        if (collector == null)
+            throw new IllegalArgumentException("Collector must not be null");
+
         ConverterFunction<I, O> converterFunction = this.toItem(converter);
         return input ->
         {
@@ -351,9 +416,7 @@ public class ConversionHelper
                                                                    .orElse(true);
 
             if (!this.parentNode.shouldBeProcessed(input))
-            {
                 return this.processEmptyCollection(defaultValue, allowEmptyCollection);
-            }
 
             return this.processEmptyCollection(input.stream()
                                                     .map(converterFunction)
@@ -364,16 +427,27 @@ public class ConversionHelper
 
     private <I, O> Converter<I, O> getConverter(Class<I> inputType, Class<O> outputType)
     {
+        Converter<I, O> converter = this.converterResolver.getConverter(inputType, outputType);
+        if (converter == null)
+            throw new UnknownConverterException(
+                    String.format("No converter found for input '%s' and output '%s'", inputType.getSimpleName(),
+                            outputType.getSimpleName())).addData("input_type", inputType.getName())
+                                                        .addData("output_type", outputType.getName());
+
         return this.converterResolver.getConverter(inputType, outputType);
     }
 
     private <T extends Collection<?>> T processEmptyCollection(T collection, boolean allowEmptyCollection)
     {
+        assert collection != null : "No collection provided";
+
         return allowEmptyCollection || !collection.isEmpty() ? collection : null;
     }
 
     private ConversionHelper createChildHelper(ConverterTreeNode node)
     {
+        assert node != null : "No tree-node provided";
+
         ConversionHelper helper = new ConversionHelper(node, this.converterResolver);
         this.context.forEach(helper::withContext);
 

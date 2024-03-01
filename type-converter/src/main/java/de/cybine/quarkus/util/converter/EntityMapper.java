@@ -51,7 +51,13 @@ public interface EntityMapper<E, D>
      */
     default Converter<E, D> toDataConverter( )
     {
-        return new GenericConverter<>(this.getEntityType(), this.getDataType(), this::toData);
+        Class<E> entityType = this.getEntityType();
+        assert entityType != null : "No entity type provided";
+
+        Class<D> dataType = this.getDataType();
+        assert dataType != null : "No data type provided";
+
+        return new GenericConverter<>(entityType, dataType, this::toData);
     }
 
     /**
@@ -59,6 +65,12 @@ public interface EntityMapper<E, D>
      */
     default Converter<D, E> toEntityConverter( )
     {
-        return new GenericConverter<>(this.getDataType(), this.getEntityType(), this::toEntity);
+        Class<D> dataType = this.getDataType();
+        assert dataType != null : "No data type provided";
+
+        Class<E> entityType = this.getEntityType();
+        assert entityType != null : "No entity type provided";
+
+        return new GenericConverter<>(dataType, entityType, this::toEntity);
     }
 }
