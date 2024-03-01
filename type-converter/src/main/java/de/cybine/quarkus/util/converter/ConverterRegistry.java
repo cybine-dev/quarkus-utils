@@ -11,6 +11,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ConverterRegistry
 {
+    private static final String INPUT_NOT_NULL = "Input type must not be null";
+    private static final String OUTPUT_NOT_NULL = "Output type must not be null";
+
     private final TypeConverterConfig config;
 
     private final Map<ConverterType<?, ?>, Converter<?, ?>> converters = new HashMap<>();
@@ -73,10 +76,28 @@ public class ConverterRegistry
      *
      * @return helper object for converting item(s)
      */
-    public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType,
-            ConverterTree metadata)
+    public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType, ConverterTree tree)
     {
-        return new ConversionProcessor<>(inputType, outputType, metadata, this::getConverter);
+        if(inputType == null)
+            throw new IllegalArgumentException(INPUT_NOT_NULL);
+
+        if(outputType == null)
+            throw new IllegalArgumentException(OUTPUT_NOT_NULL);
+
+        if(tree == null)
+            throw new IllegalArgumentException("Converter tree must not be null");
+
+        return this.getProcessor(inputType).withTree(tree).withOutput(outputType);
+    }
+
+    public <I> ConverterChain<I> getProcessor(Class<I> inputType)
+    {
+        if(inputType == null)
+            throw new IllegalArgumentException(INPUT_NOT_NULL);
+
+        return ConverterChain.withInput(inputType)
+                             .withResolver(this::getConverter)
+                             .withTree(ConverterTree.create(this.getDefaultConstraint()));
     }
 
     @SuppressWarnings("unchecked")
