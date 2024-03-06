@@ -4,6 +4,7 @@ import de.cybine.quarkus.util.*;
 import lombok.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.*;
 
 /**
@@ -14,13 +15,13 @@ import java.util.stream.*;
  * @param <O>
  *         output data-type
  *
- * @see ConversionHelper
+ * @see de.cybine.quarkus.util.converter.ConversionHelper
  */
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class ConversionProcessor<I, O>
 {
-    private static final String TYPES_NOT_EMPTY = "Converter types is empty";
+    private static final String TYPES_NOT_EMPTY  = "Converter types is empty";
     private static final String TYPE_NOT_PRESENT = "No converter type present";
 
     private final ConverterTree     metadata;
@@ -44,6 +45,50 @@ public class ConversionProcessor<I, O>
     {
         this.context.add(new BiTuple<>(property, value));
         return this;
+    }
+
+    /**
+     * Traverses all converters and checks metadata for defined relations.
+     * If any relation has no known converter, the processor is considered to have unsatisfied dependencies.
+     *
+     * @return if any required converter is unknown
+     */
+    public boolean hasUnsatisfiedDependencies( )
+    {
+        return !this.getUnsatisfiedDependencies().isEmpty();
+    }
+
+    /**
+     * Traverses all converters and checks metadata for defined relations.
+     * If any relation has no known converter, the relation is considered unsatisfied.
+     *
+     * @return list of unknown but required converters
+     */
+    public List<ConverterType<?, ?>> getUnsatisfiedDependencies( )
+    {
+        List<ConverterType<?, ?>> checkedDependencies = new ArrayList<>();
+        List<ConverterType<?, ?>> unsatisfiedDependencies = new ArrayList<>();
+
+        Queue<ConverterType<?, ?>> uncheckedDependencies = new ConcurrentLinkedDeque<>(this.types);
+        while (!uncheckedDependencies.isEmpty())
+        {
+            ConverterType<?, ?> type = uncheckedDependencies.poll();
+            if (checkedDependencies.contains(type))
+                continue;
+
+            checkedDependencies.add(type);
+
+            Converter<?, ?> converter = this.converterResolver.getConverter(type);
+            if (converter == null)
+            {
+                unsatisfiedDependencies.add(type);
+                continue;
+            }
+
+            uncheckedDependencies.addAll(this.getConverterMetadata(converter).getRelationConverterTypes());
+        }
+
+        return unsatisfiedDependencies;
     }
 
     /**
@@ -178,6 +223,11 @@ public class ConversionProcessor<I, O>
         ConversionHelper helper = this.createConversionHelper();
         return helper.toCollection(type.inputType(), type.outputType(), (C) defaultValue,
                 (Collector<S, ?, C>) collector).apply((Collection<T>) input);
+    }
+
+    private ConverterMetadata getConverterMetadata(Converter<?, ?> converter)
+    {
+        return converter.getMetadata(ConverterMetadataBuilder.create()).build();
     }
 
     private ConversionHelper createConversionHelper( )

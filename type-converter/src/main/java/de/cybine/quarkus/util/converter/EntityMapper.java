@@ -23,6 +23,22 @@ public interface EntityMapper<E, D>
     Class<D> getDataType( );
 
     /**
+     * @return metadata of the to-entity converter for property introspection and runtime optimizations
+     */
+    default ConverterMetadataBuilder getToEntityMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata;
+    }
+
+    /**
+     * @return metadata of the to-data converter for property introspection and runtime optimizations
+     */
+    default ConverterMetadataBuilder getToDataMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata;
+    }
+
+    /**
      * <p>Method to perform object mapping</p>
      *
      * @param data
@@ -57,7 +73,7 @@ public interface EntityMapper<E, D>
         Class<D> dataType = this.getDataType();
         assert dataType != null : "No data type provided";
 
-        return new GenericConverter<>(entityType, dataType, this::toData);
+        return new GenericConverter<>(entityType, dataType, this::toData, this::getToDataMetadata);
     }
 
     /**
@@ -71,6 +87,6 @@ public interface EntityMapper<E, D>
         Class<E> entityType = this.getEntityType();
         assert entityType != null : "No entity type provided";
 
-        return new GenericConverter<>(dataType, entityType, this::toEntity);
+        return new GenericConverter<>(dataType, entityType, this::toEntity, this::getToEntityMetadata);
     }
 }
