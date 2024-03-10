@@ -11,6 +11,9 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ConverterRegistry
 {
+    private static final String INPUT_NOT_NULL = "Input type must not be null";
+    private static final String OUTPUT_NOT_NULL = "Output type must not be null";
+
     private final TypeConverterConfig config;
 
     private final Map<ConverterType<?, ?>, Converter<?, ?>> converters = new HashMap<>();
@@ -23,6 +26,9 @@ public class ConverterRegistry
      */
     public void addConverter(Converter<?, ?> converter)
     {
+        if(converter == null)
+            throw new IllegalArgumentException("Converter must not be null");
+
         this.converters.put(converter.getType(), converter);
     }
 
@@ -34,8 +40,17 @@ public class ConverterRegistry
      */
     public void addEntityMapper(EntityMapper<?, ?> mapper)
     {
-        this.addConverter(mapper.toDataConverter());
-        this.addConverter(mapper.toEntityConverter());
+        if(mapper == null)
+            throw new IllegalArgumentException("Mapper must not be null");
+
+        Converter<?, ?> dataConverter = mapper.toDataConverter();
+        assert dataConverter != null : "No data converter provided";
+
+        Converter<?, ?> entityConverter = mapper.toEntityConverter();
+        assert entityConverter != null : "No entity converter provided";
+
+        this.addConverter(dataConverter);
+        this.addConverter(entityConverter);
     }
 
     /**
@@ -55,6 +70,12 @@ public class ConverterRegistry
      */
     public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType)
     {
+        if(inputType == null)
+            throw new IllegalArgumentException(INPUT_NOT_NULL);
+
+        if(outputType == null)
+            throw new IllegalArgumentException(OUTPUT_NOT_NULL);
+
         return this.getProcessor(inputType, outputType, ConverterTree.create(this.getDefaultConstraint()));
     }
 
@@ -73,15 +94,35 @@ public class ConverterRegistry
      *
      * @return helper object for converting item(s)
      */
-    public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType,
-            ConverterTree metadata)
+    public <I, O> ConversionProcessor<I, O> getProcessor(Class<I> inputType, Class<O> outputType, ConverterTree tree)
     {
-        return new ConversionProcessor<>(inputType, outputType, metadata, this::getConverter);
+        if(inputType == null)
+            throw new IllegalArgumentException(INPUT_NOT_NULL);
+
+        if(outputType == null)
+            throw new IllegalArgumentException(OUTPUT_NOT_NULL);
+
+        if(tree == null)
+            throw new IllegalArgumentException("Converter tree must not be null");
+
+        return this.getProcessor(inputType).withTree(tree).withOutput(outputType);
+    }
+
+    public <I> ConverterChain<I> getProcessor(Class<I> inputType)
+    {
+        if(inputType == null)
+            throw new IllegalArgumentException(INPUT_NOT_NULL);
+
+        return ConverterChain.withInput(inputType)
+                             .withResolver(this::getConverter)
+                             .withTree(ConverterTree.create(this.getDefaultConstraint()));
     }
 
     @SuppressWarnings("unchecked")
     private <I, O> Converter<I, O> getConverter(ConverterType<I, O> type)
     {
+        assert type != null : "No converter type provided";
+
         return (Converter<I, O>) this.converters.get(type);
     }
 

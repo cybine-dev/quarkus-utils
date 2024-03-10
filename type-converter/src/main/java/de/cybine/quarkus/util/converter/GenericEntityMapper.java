@@ -16,6 +16,18 @@ public class GenericEntityMapper<E, D> implements EntityMapper<E, D>
     private final Converter<D, E> dataConverter;
 
     @Override
+    public ConverterMetadataBuilder getToEntityMetadata(ConverterMetadataBuilder metadata)
+    {
+        return this.dataConverter.getMetadata(metadata);
+    }
+
+    @Override
+    public ConverterMetadataBuilder getToDataMetadata(ConverterMetadataBuilder metadata)
+    {
+        return this.entityConverter.getMetadata(metadata);
+    }
+
+    @Override
     public E toEntity(D data, ConversionHelper helper)
     {
         return this.dataConverter.convert(data, helper);

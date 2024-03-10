@@ -43,6 +43,12 @@ public class ConverterKeyMapper<T, K>
 
     public static <T, K> ConverterKeyMapper<T, K> create(Class<T> type, Function<T, K> keyMapper)
     {
+        if(type == null)
+            throw new IllegalArgumentException("Type must not be null");
+
+        if(keyMapper == null)
+            throw new IllegalArgumentException("Key mapper must not be null");
+
         return new ConverterKeyMapper<>(type, keyMapper);
     }
 }

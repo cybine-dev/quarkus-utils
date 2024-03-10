@@ -4,6 +4,7 @@ import de.cybine.quarkus.util.*;
 import lombok.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.*;
 
 /**
@@ -14,18 +15,19 @@ import java.util.stream.*;
  * @param <O>
  *         output data-type
  *
- * @see ConversionHelper
+ * @see de.cybine.quarkus.util.converter.ConversionHelper
  */
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class ConversionProcessor<I, O>
 {
-    private final Class<I> inputType;
-    private final Class<O> outputType;
+    private static final String TYPES_NOT_EMPTY  = "Converter types is empty";
+    private static final String TYPE_NOT_PRESENT = "No converter type present";
 
-    private final ConverterTree metadata;
-
+    private final ConverterTree     metadata;
     private final ConverterResolver converterResolver;
+
+    private final List<ConverterType<?, ?>> types;
 
     private final List<BiTuple<String, Object>> context = new ArrayList<>();
 
@@ -46,6 +48,50 @@ public class ConversionProcessor<I, O>
     }
 
     /**
+     * Traverses all converters and checks metadata for defined relations.
+     * If any relation has no known converter, the processor is considered to have unsatisfied dependencies.
+     *
+     * @return if any required converter is unknown
+     */
+    public boolean hasUnsatisfiedDependencies( )
+    {
+        return !this.getUnsatisfiedDependencies().isEmpty();
+    }
+
+    /**
+     * Traverses all converters and checks metadata for defined relations.
+     * If any relation has no known converter, the relation is considered unsatisfied.
+     *
+     * @return list of unknown but required converters
+     */
+    public List<ConverterType<?, ?>> getUnsatisfiedDependencies( )
+    {
+        List<ConverterType<?, ?>> checkedDependencies = new ArrayList<>();
+        List<ConverterType<?, ?>> unsatisfiedDependencies = new ArrayList<>();
+
+        Queue<ConverterType<?, ?>> uncheckedDependencies = new ConcurrentLinkedDeque<>(this.types);
+        while (!uncheckedDependencies.isEmpty())
+        {
+            ConverterType<?, ?> type = uncheckedDependencies.poll();
+            if (checkedDependencies.contains(type))
+                continue;
+
+            checkedDependencies.add(type);
+
+            Converter<?, ?> converter = this.converterResolver.getConverter(type);
+            if (converter == null)
+            {
+                unsatisfiedDependencies.add(type);
+                continue;
+            }
+
+            uncheckedDependencies.addAll(this.getConverterMetadata(converter).getRelationConverterTypes());
+        }
+
+        return unsatisfiedDependencies;
+    }
+
+    /**
      * Convert a single item
      *
      * @param input
@@ -55,10 +101,25 @@ public class ConversionProcessor<I, O>
      *
      * @see ConversionHelper#toItem(Class, Class)
      */
+    @SuppressWarnings("unchecked")
     public ConversionResult<O> toItem(I input)
     {
+        assert !this.types.isEmpty() : TYPES_NOT_EMPTY;
+
+        Object result = null;
+        for (ConverterType<?, ?> type : this.types)
+            result = this.toItem(type, result != null ? result : input);
+
+        return new ConversionResult<>(this.metadata, (O) result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Object toItem(ConverterType<T, ?> type, Object item)
+    {
+        assert type != null : TYPE_NOT_PRESENT;
+
         ConversionHelper helper = this.createConversionHelper();
-        return new ConversionResult<>(this.metadata, helper.toItem(this.inputType, this.outputType).apply(input));
+        return helper.toItem(type.inputType(), type.outputType()).apply((T) item);
     }
 
     /**
@@ -72,10 +133,25 @@ public class ConversionProcessor<I, O>
      * @see ConversionProcessor#toCollection(Collection, Collection, Collector)
      * @see ConversionHelper#toList(Class, Class)
      */
+    @SuppressWarnings("unchecked")
     public ConversionResult<List<O>> toList(Collection<I> input)
     {
+        assert !this.types.isEmpty() : TYPES_NOT_EMPTY;
+
+        List<?> result = null;
+        for (ConverterType<?, ?> type : this.types)
+            result = this.toList(type, result != null ? result : input);
+
+        return new ConversionResult<>(this.metadata, (List<O>) result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> List<?> toList(ConverterType<T, ?> type, Collection<?> input)
+    {
+        assert type != null : TYPE_NOT_PRESENT;
+
         ConversionHelper helper = this.createConversionHelper();
-        return new ConversionResult<>(this.metadata, helper.toList(this.inputType, this.outputType).apply(input));
+        return helper.toList(type.inputType(), type.outputType()).apply((Collection<T>) input);
     }
 
     /**
@@ -89,10 +165,25 @@ public class ConversionProcessor<I, O>
      * @see ConversionProcessor#toCollection(Collection, Collection, Collector)
      * @see ConversionHelper#toSet(Class, Class)
      */
+    @SuppressWarnings("unchecked")
     public ConversionResult<Set<O>> toSet(Collection<I> input)
     {
+        assert !this.types.isEmpty() : TYPES_NOT_EMPTY;
+
+        Set<?> result = null;
+        for (ConverterType<?, ?> type : this.types)
+            result = this.toSet(type, result != null ? result : input);
+
+        return new ConversionResult<>(this.metadata, (Set<O>) result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Set<?> toSet(ConverterType<T, ?> type, Collection<?> input)
+    {
+        assert type != null : TYPE_NOT_PRESENT;
+
         ConversionHelper helper = this.createConversionHelper();
-        return new ConversionResult<>(this.metadata, helper.toSet(this.inputType, this.outputType).apply(input));
+        return helper.toSet(type.inputType(), type.outputType()).apply((Collection<T>) input);
     }
 
     /**
@@ -109,12 +200,34 @@ public class ConversionProcessor<I, O>
      *
      * @return {@link ConversionResult}
      */
+    @SuppressWarnings("unchecked")
     public <C extends Collection<O>> ConversionResult<C> toCollection(Collection<I> input, C defaultValue,
             Collector<O, ?, C> collector)
     {
+        assert !this.types.isEmpty() : TYPES_NOT_EMPTY;
+
+        Collection<?> result = null;
+        for (ConverterType<?, ?> type : this.types)
+            result = this.toCollection(type, result != null ? result : input, defaultValue, collector);
+
+        return new ConversionResult<>(this.metadata, (C) result);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, S, C extends Collection<S>> C toCollection(ConverterType<T, S> type, Collection<?> input,
+            Object defaultValue, Collector<?, ?, ?> collector)
+    {
+        assert type != null : TYPE_NOT_PRESENT;
+        assert collector != null : "No collector provided";
+
         ConversionHelper helper = this.createConversionHelper();
-        return new ConversionResult<>(this.metadata,
-                helper.toCollection(this.inputType, this.outputType, defaultValue, collector).apply(input));
+        return helper.toCollection(type.inputType(), type.outputType(), (C) defaultValue,
+                (Collector<S, ?, C>) collector).apply((Collection<T>) input);
+    }
+
+    private ConverterMetadata getConverterMetadata(Converter<?, ?> converter)
+    {
+        return converter.getMetadata(ConverterMetadataBuilder.create()).build();
     }
 
     private ConversionHelper createConversionHelper( )

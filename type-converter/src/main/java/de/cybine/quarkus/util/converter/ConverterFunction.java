@@ -17,17 +17,20 @@ public interface ConverterFunction<I, O> extends Function<I, O>
 {
     default O apply(Supplier<? extends I> input)
     {
+        Objects.requireNonNull(input);
         return this.apply(input.get());
     }
 
     default O map(Supplier<Optional<? extends I>> input)
     {
+        Objects.requireNonNull(input);
         return this.map(input.get());
     }
 
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     default O map(Optional<? extends I> input)
     {
+        Objects.requireNonNull(input);
         return input.map(this).orElse(null);
     }
 

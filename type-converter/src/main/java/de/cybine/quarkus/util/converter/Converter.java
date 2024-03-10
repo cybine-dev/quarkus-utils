@@ -21,11 +21,25 @@ public interface Converter<I, O>
     Class<O> getOutputType( );
 
     /**
+     * @return metadata of the converter for property introspection and runtime optimizations
+     */
+    default ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata;
+    }
+
+    /**
      * @return compound type of the converter
      */
     default ConverterType<I, O> getType( )
     {
-        return new ConverterType<>(this.getInputType(), this.getOutputType());
+        Class<I> inputType = this.getInputType();
+        Class<O> outputType = this.getOutputType();
+
+        assert inputType != null : "No input type present";
+        assert outputType != null : "No output type present";
+
+        return new ConverterType<>(inputType, outputType);
     }
 
     /**
