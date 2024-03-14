@@ -12,13 +12,18 @@ import java.util.*;
 @UtilityClass
 public class FilePathHelper
 {
+    public static final String RESOURCES_PLACEHOLDER = "%resources%";
+
     public static Optional<Path> resolvePath(String path) throws URISyntaxException
     {
-        if (path.startsWith("%resources%/"))
+        try
         {
+            if(!path.startsWith("%resources%/"))
+                return Optional.of(Path.of(path));
+
             URL resourceUrl = Thread.currentThread()
                                     .getContextClassLoader()
-                                    .getResource(path.replace("%resources%/", ""));
+                                    .getResource(path.replace(RESOURCES_PLACEHOLDER + "/", ""));
 
             if (resourceUrl == null)
             {
@@ -28,8 +33,11 @@ public class FilePathHelper
 
             return Optional.of(Path.of(resourceUrl.toURI()));
         }
-
-        return Optional.of(Path.of(path));
+        catch (IllegalArgumentException | FileSystemNotFoundException | SecurityException exception)
+        {
+            log.warn("Could not find file at '{}'. Please define a valid path.", path);
+            return Optional.empty();
+        }
     }
 
     public static Optional<String> tryRead(Path path)
