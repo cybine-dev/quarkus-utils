@@ -1,13 +1,10 @@
-package de.cybine.quarkus.util.api.response;
+package de.cybine.quarkus.api.response;
 
 import com.fasterxml.jackson.annotation.*;
-import de.cybine.quarkus.api.response.*;
 import lombok.*;
-import org.jboss.resteasy.reactive.*;
-import org.jboss.resteasy.reactive.RestResponse.*;
 
-import java.net.*;
 import java.util.*;
+import java.util.function.*;
 
 @Data
 @Builder(builderClassName = "Generator")
@@ -16,7 +13,7 @@ public class ApiResponse<T>
 {
     @JsonIgnore
     @Builder.Default
-    private final Status status = Status.OK;
+    private final int statusCode = 200;
 
     @JsonProperty("value")
     private final T value;
@@ -45,19 +42,8 @@ public class ApiResponse<T>
         return Optional.of(this.errors);
     }
 
-    @JsonIgnore
-    public ResponseBuilder<ApiResponse<T>> toResponseBuilder( )
+    public <O> O transform(Function<ApiResponse<T>, O> mapper)
     {
-        ResponseBuilder<ApiResponse<T>> builder = ResponseBuilder.create(this.status, this);
-
-        this.getSelf().map(ApiResourceInfo::getHref).map(URI::create).ifPresent(builder::location);
-
-        return builder;
-    }
-
-    @JsonIgnore
-    public RestResponse<ApiResponse<T>> toResponse( )
-    {
-        return this.toResponseBuilder().build();
+        return mapper.apply(this);
     }
 }

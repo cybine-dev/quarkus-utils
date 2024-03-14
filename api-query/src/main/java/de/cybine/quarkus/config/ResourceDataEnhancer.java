@@ -1,8 +1,7 @@
 package de.cybine.quarkus.config;
 
 import de.cybine.quarkus.api.response.*;
-import de.cybine.quarkus.util.api.query.*;
-import de.cybine.quarkus.util.api.response.*;
+import de.cybine.quarkus.util.api.*;
 import io.smallrye.config.common.utils.*;
 import io.vertx.core.http.*;
 import jakarta.inject.*;

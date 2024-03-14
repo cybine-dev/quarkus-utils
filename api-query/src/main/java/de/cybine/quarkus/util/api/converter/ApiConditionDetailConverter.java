@@ -31,6 +31,12 @@ public class ApiConditionDetailConverter implements Converter<ApiConditionDetail
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiConditionDetail.Type.class, DatasourceConditionDetail.Type.class);
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public DatasourceConditionDetail convert(ApiConditionDetail input, ConversionHelper helper)
     {
@@ -38,7 +44,9 @@ public class ApiConditionDetailConverter implements Converter<ApiConditionDetail
         helper.updateContext(ApiQueryConverter.FIELD_PATH_PROPERTY,
                 path -> String.format("%s.%s", path, input.getProperty()));
 
-        Type type = input.getType();
+        Type type = helper.toItem(ApiConditionDetail.Type.class, DatasourceConditionDetail.Type.class)
+                          .apply(input::getType);
+
         ApiFieldPath path = ApiQueryConverter.getFieldPathOrThrow(helper);
         DatasourceConditionDetail.Generator builder = DatasourceConditionDetail.builder()
                                                                                .property(

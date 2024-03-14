@@ -1,10 +1,10 @@
 package de.cybine.quarkus.util.api.query;
 
 import com.fasterxml.jackson.annotation.*;
-import de.cybine.quarkus.util.datasource.DatasourceConditionInfo.*;
 import jakarta.validation.*;
 import lombok.*;
 import lombok.extern.jackson.*;
+import org.eclipse.microprofile.openapi.annotations.media.*;
 
 import java.util.*;
 
@@ -31,4 +31,10 @@ public class ApiConditionInfo
     @Singular
     @JsonProperty("sub_conditions")
     private final List<ApiConditionInfo> subConditions;
+
+    @Schema(name = "ConditionEvaluationMethod")
+    public enum EvaluationMethod
+    {
+        AND, OR
+    }
 }

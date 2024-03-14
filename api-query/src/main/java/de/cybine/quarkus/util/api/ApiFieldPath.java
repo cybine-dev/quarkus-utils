@@ -15,9 +15,7 @@ public class ApiFieldPath
     public ApiFieldPath(@Singular("field") List<ApiField> path)
     {
         if (path.isEmpty())
-        {
             throw new IllegalArgumentException("Path cannot be emtpy");
-        }
 
         this.path = path;
     }

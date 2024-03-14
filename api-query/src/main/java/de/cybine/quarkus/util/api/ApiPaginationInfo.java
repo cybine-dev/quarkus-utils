@@ -1,4 +1,4 @@
-package de.cybine.quarkus.util.api.query;
+package de.cybine.quarkus.util.api;
 
 import com.fasterxml.jackson.annotation.*;
 import io.quarkus.arc.*;

@@ -18,6 +18,8 @@ public class ApiQueryConverterConfig
     public void setup( )
     {
         this.registry.addConverter(new ApiConditionDetailConverter());
+        this.registry.addConverter(new ApiConditionDetailTypeConverter());
+        this.registry.addConverter(new ApiConditionEvaluationMethodConverter());
         this.registry.addConverter(new ApiConditionInfoConverter());
         this.registry.addConverter(new ApiCountQueryConverter());
         this.registry.addConverter(new ApiCountRelationConverter());

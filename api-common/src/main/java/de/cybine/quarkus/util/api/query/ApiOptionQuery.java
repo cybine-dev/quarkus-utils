@@ -20,13 +20,13 @@ public class ApiOptionQuery
 
     @Valid
     @JsonProperty("pagination")
-    private final ApiPaginationInfo pagination;
+    private final ApiQueryPagination pagination;
 
     @Valid
     @JsonProperty("condition")
     private final ApiConditionInfo condition;
 
-    public Optional<ApiPaginationInfo> getPagination( )
+    public Optional<ApiQueryPagination> getPagination( )
     {
         return Optional.ofNullable(this.pagination);
     }

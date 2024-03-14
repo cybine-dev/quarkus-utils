@@ -4,12 +4,12 @@ import de.cybine.quarkus.util.api.query.*;
 import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.datasource.*;
 
-public class ApiPaginationInfoConverter implements Converter<ApiPaginationInfo, DatasourcePaginationInfo>
+public class ApiPaginationInfoConverter implements Converter<ApiQueryPagination, DatasourcePaginationInfo>
 {
     @Override
-    public Class<ApiPaginationInfo> getInputType( )
+    public Class<ApiQueryPagination> getInputType( )
     {
-        return ApiPaginationInfo.class;
+        return ApiQueryPagination.class;
     }
 
     @Override
@@ -19,7 +19,7 @@ public class ApiPaginationInfoConverter implements Converter<ApiPaginationInfo, 
     }
 
     @Override
-    public DatasourcePaginationInfo convert(ApiPaginationInfo input, ConversionHelper helper)
+    public DatasourcePaginationInfo convert(ApiQueryPagination input, ConversionHelper helper)
     {
         return DatasourcePaginationInfo.builder()
                                        .size(input.getSize().orElse(null))

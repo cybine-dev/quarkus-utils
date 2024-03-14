@@ -23,6 +23,13 @@ public class ApiCountQueryConverter implements Converter<ApiCountQuery, Datasour
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiConditionInfo.class, DatasourceConditionInfo.class)
+                       .withRelation(ApiCountRelationInfo.class, DatasourceRelationInfo.class);
+    }
+
+    @Override
     public DatasourceQuery convert(ApiCountQuery input, ConversionHelper helper)
     {
         // TODO: Update to use Scopes
