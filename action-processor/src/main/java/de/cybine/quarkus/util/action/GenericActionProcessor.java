@@ -5,14 +5,22 @@ import lombok.*;
 
 import java.util.function.*;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class GenericActionProcessor implements ActionProcessor
 {
     @Getter
     private final ActionProcessorMetadata metadata;
 
-    private final BiPredicate<Action, ActionHelper>                 executionCondition;
+    private final BiPredicate<Action, ActionHelper> permissionCheck;
+    private final BiPredicate<Action, ActionHelper> executionCondition;
+
     private final BiFunction<Action, ActionHelper, ActionResult<?>> executor;
+
+    @Override
+    public boolean hasPermission(Action action, ActionHelper helper)
+    {
+        return this.permissionCheck.test(action, helper);
+    }
 
     @Override
     public boolean shouldExecute(Action action, ActionHelper helper)

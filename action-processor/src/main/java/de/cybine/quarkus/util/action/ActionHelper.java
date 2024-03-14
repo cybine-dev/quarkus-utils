@@ -2,6 +2,7 @@ package de.cybine.quarkus.util.action;
 
 import de.cybine.quarkus.util.action.data.*;
 import de.cybine.quarkus.util.action.stateful.*;
+import io.quarkus.security.identity.*;
 import lombok.*;
 
 import java.util.*;
@@ -14,6 +15,8 @@ public class ActionHelper
 
     private final ActionMetadata  metadata;
     private final ActionResult<?> previousState;
+
+    private final SecurityIdentity securityIdentity;
 
     private final BiConsumer<String, String> updateItemId;
 
@@ -44,6 +47,11 @@ public class ActionHelper
     public <T> Optional<ActionResult<T>> getPrevious( )
     {
         return Optional.ofNullable((ActionResult<T>) this.previousState);
+    }
+
+    public Optional<SecurityIdentity> getSecurityIdentity( )
+    {
+        return Optional.ofNullable(this.securityIdentity);
     }
 
     public ActionResult<Object> createResult( )

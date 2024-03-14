@@ -3,7 +3,9 @@ package de.cybine.quarkus.util.action.stateless;
 import de.cybine.quarkus.exception.action.*;
 import de.cybine.quarkus.util.action.*;
 import de.cybine.quarkus.util.action.data.*;
+import io.quarkus.security.identity.*;
 import jakarta.inject.*;
+import lombok.*;
 import lombok.extern.slf4j.*;
 
 import java.util.*;
@@ -11,9 +13,12 @@ import java.util.stream.*;
 
 @Slf4j
 @Singleton
+@RequiredArgsConstructor
 public class GenericStatelessActionService implements StatelessActionService
 {
     private final List<ActionProcessor> processors = new ArrayList<>();
+
+    private final SecurityIdentity securityIdentity;
 
     @Override
     public void registerProcessor(ActionProcessor processor)
@@ -49,7 +54,10 @@ public class GenericStatelessActionService implements StatelessActionService
             throw new UnknownActionException(String.format("Action of type %s is unknown", action.toShortForm()));
 
         ActionMetadata metadata = action.getMetadata();
-        ActionHelper helper = new ActionHelper(this, metadata, null, null);
+        ActionHelper helper = new ActionHelper(this, metadata, null, this.securityIdentity, null);
+        if (!processor.hasPermission(action, helper))
+            throw new UnauthorizedActionException("Executor is not allowed to perform this action.");
+
         if (!processor.shouldExecute(action, helper))
             throw new ActionPreconditionException("Action did not meet precondition.");
 

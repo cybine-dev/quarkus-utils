@@ -1,13 +1,12 @@
-package de.cybine.quarkus.util.action.data;
+package de.cybine.quarkus.util.action;
 
-import de.cybine.quarkus.util.action.*;
+import de.cybine.quarkus.util.action.data.*;
 import lombok.*;
 import lombok.experimental.*;
 
 import java.util.*;
 import java.util.function.*;
 
-// TODO add setters for namespace, category, name
 @Accessors(fluent = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ActionProcessorBuilder
@@ -25,7 +24,8 @@ public class ActionProcessorBuilder
 
     private String from;
 
-    private BiPredicate<Action, ActionHelper> condition = (action, helper) -> true;
+    private BiPredicate<Action, ActionHelper> permission = (action, helper) -> true;
+    private BiPredicate<Action, ActionHelper> condition  = (action, helper) -> true;
 
     private BiFunction<Action, ActionHelper, ActionResult<?>> executor = (action, helper) -> action.getData()
                                                                                                    .map(ActionData::value)
@@ -52,6 +52,12 @@ public class ActionProcessorBuilder
         return this;
     }
 
+    public ActionProcessorBuilder withPermission(BiPredicate<Action, ActionHelper> permission)
+    {
+        this.permission = permission;
+        return this;
+    }
+
     public ActionProcessorBuilder apply(BiFunction<Action, ActionHelper, ActionResult<?>> executor)
     {
         this.executor = executor;
@@ -60,7 +66,7 @@ public class ActionProcessorBuilder
 
     public ActionProcessor build( )
     {
-        return new GenericActionProcessor(this.toMetadata(), this.condition, this.executor);
+        return new GenericActionProcessor(this.toMetadata(), this.permission, this.condition, this.executor);
     }
 
     private ActionProcessorMetadata toMetadata( )
