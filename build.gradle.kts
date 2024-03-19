@@ -5,7 +5,7 @@ plugins {
 
 subprojects {
     group = "de.cybine.quarkus"
-    version = "0.3.2-SNAPSHOT"
+    version = "0.4.0-SNAPSHOT"
 
     apply<JavaLibraryPlugin>()
     apply<MavenPublishPlugin>()

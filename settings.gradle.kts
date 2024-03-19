@@ -20,6 +20,7 @@ rootProject.name = "quarkus-utils"
 include("common")
 include("type-converter", "type-converter-deployment")
 include("datasource-query", "datasource-query-deployment")
+include("api-common")
 include("api-query", "api-query-deployment")
 include("event-manager", "event-manager-deployment")
 include("action-processor", "action-processor-deployment")

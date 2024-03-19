@@ -21,11 +21,23 @@ public class ApiConditionInfoConverter implements Converter<ApiConditionInfo, Da
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiConditionInfo.EvaluationMethod.class,
+                               DatasourceConditionInfo.EvaluationMethod.class)
+                       .withRelation(ApiConditionDetail.class, DatasourceConditionDetail.class)
+                       .withRelation(ApiConditionInfo.class, DatasourceConditionInfo.class);
+    }
+
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public DatasourceConditionInfo convert(ApiConditionInfo input, ConversionHelper helper)
     {
+        DatasourceConditionInfo.EvaluationMethod type = helper.toItem(ApiConditionInfo.EvaluationMethod.class,
+                DatasourceConditionInfo.EvaluationMethod.class).apply(input::getType);
+
         return DatasourceConditionInfo.builder()
-                                      .type(input.getType())
+                                      .type(type)
                                       .isInverted(input.isInverted())
                                       .details((Collection) helper.toList(ApiConditionDetail.class,
                                               DatasourceConditionDetail.class).apply(input::getDetails))

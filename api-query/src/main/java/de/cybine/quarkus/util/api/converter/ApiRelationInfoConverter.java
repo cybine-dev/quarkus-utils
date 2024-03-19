@@ -27,6 +27,14 @@ public class ApiRelationInfoConverter implements Converter<ApiRelationInfo, Data
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiConditionInfo.class, DatasourceConditionInfo.class)
+                       .withRelation(ApiOrderInfo.class, DatasourceOrderInfo.class)
+                       .withRelation(ApiRelationInfo.class, DatasourceRelationInfo.class);
+    }
+
+    @Override
     public DatasourceRelationInfo convert(ApiRelationInfo input, ConversionHelper helper)
     {
         if (input.getRelations() != null && !input.getRelations().isEmpty() && !this.allowMultiLevelRelations())

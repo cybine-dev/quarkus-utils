@@ -80,7 +80,6 @@ public class DatasourceConditionInfo
         return values;
     }
 
-    @Schema(name = "ConditionEvaluationMethod")
     public enum EvaluationMethod
     {
         AND, OR

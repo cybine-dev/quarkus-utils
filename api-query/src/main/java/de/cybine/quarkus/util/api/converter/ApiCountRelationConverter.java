@@ -24,6 +24,12 @@ public class ApiCountRelationConverter implements Converter<ApiCountRelationInfo
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiConditionInfo.class, DatasourceConditionInfo.class);
+    }
+
+    @Override
     public DatasourceRelationInfo convert(ApiCountRelationInfo input, ConversionHelper helper)
     {
         int steps = input.getProperty().split("\\.").length;

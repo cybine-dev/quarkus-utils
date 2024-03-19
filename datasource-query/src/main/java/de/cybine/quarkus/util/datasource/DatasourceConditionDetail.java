@@ -8,7 +8,6 @@ import io.smallrye.common.constraint.*;
 import jakarta.persistence.criteria.*;
 import lombok.*;
 import lombok.experimental.*;
-import org.eclipse.microprofile.openapi.annotations.media.*;
 
 import java.util.*;
 
@@ -101,7 +100,6 @@ public class DatasourceConditionDetail<T>
 
     @Getter
     @Accessors(fluent = true)
-    @Schema(name = "ConditionType")
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
     public enum Type
     {

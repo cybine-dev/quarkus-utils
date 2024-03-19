@@ -29,10 +29,19 @@ public class ApiQueryConverter implements Converter<ApiQuery, DatasourceQuery>
     }
 
     @Override
+    public ConverterMetadataBuilder getMetadata(ConverterMetadataBuilder metadata)
+    {
+        return metadata.withRelation(ApiQueryPagination.class, DatasourcePaginationInfo.class)
+                       .withRelation(ApiConditionInfo.class, DatasourceConditionInfo.class)
+                       .withRelation(ApiOrderInfo.class, DatasourceOrderInfo.class)
+                       .withRelation(ApiRelationInfo.class, DatasourceRelationInfo.class);
+    }
+
+    @Override
     public DatasourceQuery convert(ApiQuery input, ConversionHelper helper)
     {
         return DatasourceQuery.builder()
-                              .pagination(helper.toItem(ApiPaginationInfo.class, DatasourcePaginationInfo.class)
+                              .pagination(helper.toItem(ApiQueryPagination.class, DatasourcePaginationInfo.class)
                                                 .map(input::getPagination))
                               .condition(helper.toItem(ApiConditionInfo.class, DatasourceConditionInfo.class)
                                                .map(input::getCondition))

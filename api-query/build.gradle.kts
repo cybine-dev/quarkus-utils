@@ -10,6 +10,7 @@ quarkusExtension {
 dependencies {
     implementation(platform(libs.quarkus.bom))
 
+    implementation(project(":api-common"))
     implementation(project(":common"))
     implementation(project(":datasource-query"))
     implementation(project(":type-converter"))
