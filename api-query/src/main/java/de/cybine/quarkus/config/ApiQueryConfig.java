@@ -17,6 +17,13 @@ public interface ApiQueryConfig
     boolean allowMultiLevelRelations( );
 
     /**
+     * Defines if failures during response property filtering will be ignored or stop the response
+     */
+    @WithDefault("false")
+    @WithName("ignore-property-filter-failures")
+    boolean ignorePropertyFilterFailures( );
+
+    /**
      * Defines paths to additional configuration files
      */
     @WithName("paths")
