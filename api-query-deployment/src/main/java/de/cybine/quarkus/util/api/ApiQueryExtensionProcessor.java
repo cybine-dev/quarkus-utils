@@ -48,6 +48,12 @@ public class ApiQueryExtensionProcessor
     }
 
     @BuildStep
+    public AdditionalBeanBuildItem createApiQueryFilterConfig( )
+    {
+        return new AdditionalBeanBuildItem(ApiQueryFilterConfig.class);
+    }
+
+    @BuildStep
     public AdditionalBeanBuildItem createApiPaginationInfo( )
     {
         return new AdditionalBeanBuildItem(ApiPaginationInfo.class);

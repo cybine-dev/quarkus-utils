@@ -1,5 +1,6 @@
 package de.cybine.quarkus.config;
 
+import de.cybine.quarkus.util.api.permission.*;
 import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.*;
 
@@ -20,8 +21,15 @@ public interface ApiQueryConfig
      * Defines if failures during response property filtering will be ignored or stop the response
      */
     @WithDefault("false")
-    @WithName("ignore-property-filter-failures")
+    @WithName("property-filter.ignore-failures")
     boolean ignorePropertyFilterFailures( );
+
+    /**
+     * Defines the scope of responses to which the property filter will be applied
+     */
+    @WithDefault("API_FIELDS")
+    @WithName("property-filter.scope")
+    PropertyFilterScope propertyFilterScope( );
 
     /**
      * Defines paths to additional configuration files
