@@ -30,6 +30,9 @@ public class GenericResponseFilter implements ResponseFilter
     {
         try
         {
+            if (response.getEntity() == null)
+                return;
+
             JsonNode node = this.getObjectMapper().valueToTree(response.getEntity());
             this.filter(node);
             response.setEntity(node.toString());

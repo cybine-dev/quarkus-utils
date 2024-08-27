@@ -31,10 +31,19 @@ public class ApiFieldResponseFilter implements ResponseFilter
         try
         {
             Object entity = response.getEntity();
+            if (entity == null)
+                return;
+
             JsonNode node = this.objectMapper.valueToTree(entity);
+            if (node == null)
+                return;
+
             if (entity instanceof ApiResponse<?> apiResponse)
             {
                 Object value = apiResponse.getValue();
+                if (value == null)
+                    return;
+
                 while (value instanceof Collection<?> collection && !collection.isEmpty())
                     value = collection.iterator().next();
 
