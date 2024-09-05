@@ -48,13 +48,8 @@ subprojects {
 
         repositories {
             maven {
-                val releasesRepoUrl = "https://repository.cybine.de/repository/maven-releases/"
-                val snapshotsRepoUrl = "https://repository.cybine.de/repository/maven-snapshots/"
-
-                val isSnapshot = (project.version as String).endsWith("-SNAPSHOT")
-
                 name = "cybine"
-                url = uri(if (isSnapshot) snapshotsRepoUrl else releasesRepoUrl)
+                url = uri("https://repository.cybine.de/repository/maven-hosted/")
 
                 credentials(PasswordCredentials::class)
             }
