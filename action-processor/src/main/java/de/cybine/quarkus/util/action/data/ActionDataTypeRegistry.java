@@ -11,7 +11,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ActionDataTypeRegistry
 {
-
     private final ObjectMapper objectMapper;
 
     private final Map<String, JavaType> dataTypes = new HashMap<>();

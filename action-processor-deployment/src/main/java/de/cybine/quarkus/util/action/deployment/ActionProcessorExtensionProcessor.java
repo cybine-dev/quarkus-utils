@@ -20,7 +20,7 @@ public class ActionProcessorExtensionProcessor
     @BuildStep
     public AdditionalBeanBuildItem createDataTypeRegistry()
     {
-        return new AdditionalBeanBuildItem(ActionDataTypeRegistry.class);
+        return AdditionalBeanBuildItem.unremovableOf(ActionDataTypeRegistry.class);
     }
 
     @BuildStep
