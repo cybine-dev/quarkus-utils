@@ -13,5 +13,7 @@ dependencies {
     implementation("io.quarkus:quarkus-jackson-deployment")
     implementation("io.quarkus:quarkus-smallrye-openapi-deployment")
 
+    testImplementation(project(":test-utils"))
+    testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-internal")
 }

@@ -9,6 +9,7 @@ import de.cybine.quarkus.util.action.deployment.data.action.process.*;
 import de.cybine.quarkus.util.action.deployment.service.action.*;
 import de.cybine.quarkus.util.action.stateful.*;
 import de.cybine.quarkus.util.converter.*;
+import de.cybine.quarkus.util.test.*;
 import io.quarkus.arc.*;
 import io.quarkus.test.junit.*;
 import lombok.*;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @RequiredArgsConstructor
+@TestProfile(TestProfiles.Container.class)
 class StatefulActionProcessorTest
 {
     private final ActionService actionService;

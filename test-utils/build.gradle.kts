@@ -1,0 +1,9 @@
+plugins {
+    alias(libs.plugins.lombok)
+}
+
+dependencies {
+    implementation(platform(libs.quarkus.bom))
+
+    implementation("io.quarkus:quarkus-junit5")
+}

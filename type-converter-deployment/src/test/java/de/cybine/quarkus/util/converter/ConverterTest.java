@@ -7,7 +7,9 @@ import de.cybine.quarkus.data.mail.mailbox.*;
 import de.cybine.quarkus.data.mail.tls.*;
 import de.cybine.quarkus.data.mail.user.*;
 import de.cybine.quarkus.exception.converter.*;
+import de.cybine.quarkus.util.test.*;
 import io.quarkus.test.*;
+import io.quarkus.test.junit.*;
 import jakarta.enterprise.inject.*;
 import jakarta.inject.*;
 import org.jboss.shrinkwrap.api.*;
@@ -20,6 +22,7 @@ import java.util.*;
 import java.util.stream.*;
 
 @DisplayName("Converter Module")
+@TestProfile(TestProfiles.Integration.class)
 class ConverterTest
 {
     @RegisterExtension

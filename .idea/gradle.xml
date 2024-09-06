@@ -19,6 +19,7 @@
             <option value="$PROJECT_DIR$/datasource-query-deployment" />
             <option value="$PROJECT_DIR$/event-manager" />
             <option value="$PROJECT_DIR$/event-manager-deployment" />
+            <option value="$PROJECT_DIR$/test-utils" />
             <option value="$PROJECT_DIR$/type-converter" />
             <option value="$PROJECT_DIR$/type-converter-deployment" />
           </set>

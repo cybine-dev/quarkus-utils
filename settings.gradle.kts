@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "quarkus-utils"
 
+include("test-utils")
 include("common")
 include("type-converter", "type-converter-deployment")
 include("datasource-query", "datasource-query-deployment")

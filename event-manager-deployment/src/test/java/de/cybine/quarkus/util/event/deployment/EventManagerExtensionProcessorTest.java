@@ -1,7 +1,9 @@
 package de.cybine.quarkus.util.event.deployment;
 
 import de.cybine.quarkus.util.event.*;
+import de.cybine.quarkus.util.test.*;
 import io.quarkus.test.*;
+import io.quarkus.test.junit.*;
 import jakarta.enterprise.inject.*;
 import jakarta.inject.*;
 import lombok.*;
@@ -12,6 +14,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestProfile(TestProfiles.Integration.class)
 class EventManagerExtensionProcessorTest
 {
     @RegisterExtension
