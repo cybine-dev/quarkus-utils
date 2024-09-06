@@ -15,6 +15,10 @@ subprojects {
         options.compilerArgs.add("-parameters")
     }
 
+    tasks.withType<Test> {
+        systemProperty("quarkus.test.profile.tags", System.getenv("QUARKUS_TEST_PROFILE_TAGS") ?: "")
+    }
+
     java {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
