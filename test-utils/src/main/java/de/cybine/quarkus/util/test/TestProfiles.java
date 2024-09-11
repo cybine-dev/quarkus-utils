@@ -23,7 +23,16 @@ public class TestProfiles
         @Override
         public Set<String> tags( )
         {
-            return Set.of("integration", "container");
+            return Set.of("integration");
+        }
+    }
+
+    public static class Database implements QuarkusTestProfile
+    {
+        @Override
+        public Set<String> tags( )
+        {
+            return Set.of("database");
         }
     }
 

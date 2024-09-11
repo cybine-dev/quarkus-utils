@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
 @RequiredArgsConstructor
-@TestProfile(TestProfiles.Container.class)
+@TestProfile(TestProfiles.Database.class)
 class StatefulActionProcessorTest
 {
     private final ActionService actionService;
