@@ -119,7 +119,11 @@ public class ActionData<T>
         {
             ObjectMapper mapper = Arc.container().select(ObjectMapper.class).get();
             JsonNode jsonNode = mapper.readTree(json);
-            String typeName = jsonNode.findValue("@type").asText();
+            JsonNode typeNode = jsonNode.findValue("@type");
+
+            String typeName = null;
+            if(typeNode != null)
+                typeName = typeNode.asText();
 
             ActionDataTypeRegistry registry = Arc.container().select(ActionDataTypeRegistry.class).get();
             JavaType type = registry.findType(typeName).orElse(null);

@@ -20,7 +20,7 @@ public class ActionDataAttributeConverter implements AttributeConverter<ActionDa
     @Override
     public ActionData<?> convertToEntityAttribute(String dbData)
     {
-        if (dbData == null)
+        if (dbData == null || dbData.equalsIgnoreCase("null"))
             return null;
 
         return ActionData.fromJson(dbData);
