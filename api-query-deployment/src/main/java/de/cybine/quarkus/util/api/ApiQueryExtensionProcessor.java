@@ -2,6 +2,7 @@ package de.cybine.quarkus.util.api;
 
 import de.cybine.quarkus.config.*;
 import de.cybine.quarkus.util.api.permission.*;
+import de.cybine.quarkus.util.api.secret.*;
 import io.quarkus.arc.deployment.*;
 import io.quarkus.deployment.annotations.*;
 import io.quarkus.deployment.builditem.*;
@@ -54,8 +55,20 @@ public class ApiQueryExtensionProcessor
     }
 
     @BuildStep
-    public AdditionalBeanBuildItem createApiPaginationInfo( )
+    public AdditionalBeanBuildItem creat4e( )
     {
-        return new AdditionalBeanBuildItem(ApiPaginationInfo.class);
+        return new AdditionalBeanBuildItem(ApiQueryConfig.class);
+    }
+
+    @BuildStep
+    public AdditionalBeanBuildItem createSecretProvider( )
+    {
+        return new AdditionalBeanBuildItem(SecretProvider.class);
+    }
+
+    @BuildStep
+    public AdditionalBeanBuildItem createApiQueryContext( )
+    {
+        return AdditionalBeanBuildItem.unremovableOf(ApiQueryContext.class);
     }
 }

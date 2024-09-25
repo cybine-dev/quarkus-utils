@@ -4,6 +4,8 @@ import de.cybine.quarkus.util.api.permission.*;
 import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.*;
 
+import java.util.*;
+
 import static de.cybine.quarkus.util.FilePathHelper.*;
 
 @ConfigRoot(phase = ConfigPhase.RUN_TIME)
@@ -37,6 +39,12 @@ public interface ApiQueryConfig
     @WithName("paths")
     FilePaths paths( );
 
+    /**
+     *
+     */
+    @WithName("secret")
+    SecretProvider secretProvider();
+
     interface FilePaths
     {
         /**
@@ -52,5 +60,40 @@ public interface ApiQueryConfig
         @WithName("api-permissions-path")
         @WithDefault(RESOURCES_PLACEHOLDER + "/api-permissions.json")
         String apiPermissionsPath( );
+    }
+
+    interface SecretProvider
+    {
+        /**
+         *
+         */
+        @WithDefault("false")
+        @WithName("allow-empty-subject")
+        boolean allowEmptySubject( );
+
+        /**
+         *
+         */
+        @WithName("symmetric.cipher")
+        @WithDefault("AES/CBC/PKCS5Padding")
+        String symmetricCipher( );
+
+        /**
+         *
+         */
+        @WithName("symmetric-key")
+        Optional<String> symmetricKey( );
+
+        /**
+         *
+         */
+        @WithName("asymmetric.private-key-path")
+        Optional<String> privateKeyPath( );
+
+        /**
+         *
+         */
+        @WithName("asymmetric.public-key-path")
+        Optional<String> publicKeyPath( );
     }
 }

@@ -16,17 +16,17 @@ public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
 {
     private final ApiFieldResolverContext context;
 
-    private final ApiPaginationInfo pagination;
+    private final ApiQueryContext apiContext;
 
     private final ObjectMapper objectMapper;
 
     private GenericApiQueryService(Class<E> entityType, Class<D> dataType, ConverterRegistry registry,
-            GenericDatasourceRepository<E> repository, ApiFieldResolverContext context, ApiPaginationInfo pagination,
+            GenericDatasourceRepository<E> repository, ApiFieldResolverContext context, ApiQueryContext apiContext,
             ObjectMapper objectMapper)
     {
         super(entityType, dataType, registry, repository);
         this.context = context;
-        this.pagination = pagination;
+        this.apiContext = apiContext;
         this.objectMapper = objectMapper;
     }
 
@@ -119,21 +119,21 @@ public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
 
     private void applyPagination(DatasourcePaginationInfo pagination)
     {
-        pagination.getSize().ifPresent(this.pagination::setSize);
-        pagination.getOffset().ifPresent(this.pagination::setOffset);
-        pagination.getTotal().ifPresent(this.pagination::setTotal);
+        pagination.getSize().ifPresent(this.apiContext.getPaginationInfo()::setSize);
+        pagination.getOffset().ifPresent(this.apiContext.getPaginationInfo()::setOffset);
+        pagination.getTotal().ifPresent(this.apiContext.getPaginationInfo()::setTotal);
     }
 
     public static <E, D> GenericApiQueryService<E, D> forType(Class<E> entityType, Class<D> dataType)
     {
         ConverterRegistry converterRegistry = Arc.container().select(ConverterRegistry.class).get();
         ApiFieldResolverContext context = Arc.container().select(ApiFieldResolverContext.class).get();
-        ApiPaginationInfo pagination = Arc.container().select(ApiPaginationInfo.class).get();
+        ApiQueryContext apiContext = Arc.container().select(ApiQueryContext.class).get();
         ObjectMapper objectMapper = Arc.container().select(ObjectMapper.class).get();
 
         GenericDatasourceRepository<E> repository = GenericDatasourceRepository.forType(entityType);
 
-        return new GenericApiQueryService<>(entityType, dataType, converterRegistry, repository, context, pagination,
+        return new GenericApiQueryService<>(entityType, dataType, converterRegistry, repository, context, apiContext,
                 objectMapper);
     }
 }

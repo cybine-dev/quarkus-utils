@@ -15,6 +15,7 @@ dependencies {
 
     testImplementation(project(":api-common"))
     testImplementation(project(":api-query"))
+    testImplementation(project(":api-query-deployment"))
     testImplementation(project(":datasource-query"))
     testImplementation(project(":type-converter"))
 
