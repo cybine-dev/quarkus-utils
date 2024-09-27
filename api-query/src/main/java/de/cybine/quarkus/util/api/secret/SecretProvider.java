@@ -80,14 +80,15 @@ public class SecretProvider
 
             SecurityIdentity identity = this.securityIdentityRef.get();
             Principal principal = identity.getPrincipal();
-            if (identity.isAnonymous() || principal == null)
+            boolean isAnonymous = identity.isAnonymous() || principal == null;
+            if (isAnonymous && !this.config.secretProvider().allowEmptySubject())
                 throw new SecretProviderException("Cannot read secret: Invalid user identity");
 
-            if (!principal.getName().equals(subject))
+            if (!isAnonymous && !principal.getName().equals(subject))
                 throw new SecretProviderException("Cannot read secret: Invalid user identity");
         }
 
-        return this.decryptValue(secret);
+        return this.decryptValue(token.getClaim(CLAIM));
     }
 
     private String encryptValue(SecretData data)
@@ -102,7 +103,7 @@ public class SecretProvider
             cipher.init(Cipher.ENCRYPT_MODE, this.getEncryptionKey(salt), new IvParameterSpec(iv));
             byte[] ciphertext = cipher.doFinal(value);
 
-            byte[] result = new byte[ ciphertext.length + 2 * 16 ];
+            byte[] result = new byte[ ciphertext.length + 32 ];
             System.arraycopy(iv, 0, result, 0, 16);
             System.arraycopy(salt, 0, result, 16, 16);
             System.arraycopy(ciphertext, 0, result, 32, ciphertext.length);
@@ -117,6 +118,22 @@ public class SecretProvider
         }
     }
 
+    public boolean canCreateSecret( )
+    {
+        // @formatter:off
+        return this.config.secretProvider().privateKeyPath().isPresent() &&
+                this.config.secretProvider().symmetricKey().isPresent();
+        // @formatter:on
+    }
+
+    public boolean canReadSecret( )
+    {
+        // @formatter:off
+        return this.config.secretProvider().publicKeyPath().isPresent() &&
+                this.config.secretProvider().symmetricKey().isPresent();
+        // @formatter:on
+    }
+
     private SecretData decryptValue(String value)
     {
         try
@@ -124,10 +141,10 @@ public class SecretProvider
             byte[] encryptedValue = Base64.getDecoder().decode(value);
             byte[] iv = new byte[ 16 ];
             byte[] salt = new byte[ 16 ];
-            byte[] ciphertext = new byte[ encryptedValue.length - 2 * 16 ];
+            byte[] ciphertext = new byte[ encryptedValue.length - 32 ];
             System.arraycopy(encryptedValue, 0, iv, 0, 16);
             System.arraycopy(encryptedValue, 16, salt, 0, 16);
-            System.arraycopy(encryptedValue, 2 * 16, ciphertext, 0, ciphertext.length);
+            System.arraycopy(encryptedValue, 32, ciphertext, 0, ciphertext.length);
 
             Cipher cipher = Cipher.getInstance(this.config.secretProvider().symmetricCipher());
             cipher.init(Cipher.DECRYPT_MODE, this.getEncryptionKey(salt), new IvParameterSpec(iv));
@@ -172,7 +189,7 @@ public class SecretProvider
 
             String keyString = Files.readString(path).replaceAll("-----\\w+ PUBLIC KEY-----", "").strip();
             byte[] key = Base64.getDecoder().decode(keyString);
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(key);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(key);
             KeyFactory keyFactory = KeyFactory.getInstance("Ed25519");
 
             return keyFactory.generatePublic(keySpec);
@@ -185,12 +202,12 @@ public class SecretProvider
 
     private SecretKey getEncryptionKey(byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException
     {
-        KeySpec spec = new PBEKeySpec(this.config.secretProvider().symmetricKey().orElseThrow().toCharArray(), salt,
-                1000000, 256);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        byte[] key = factory.generateSecret(spec).getEncoded();
 
-        return new SecretKeySpec(key, 0, key.length, "AES");
+        char[] password = this.config.secretProvider().symmetricKey().orElseThrow().toCharArray();
+        KeySpec spec = new PBEKeySpec(password, salt, 256 * 256, 256);
+
+        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
     }
 
     private byte[] generateSalt( )

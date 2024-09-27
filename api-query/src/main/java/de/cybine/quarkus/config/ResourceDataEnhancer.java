@@ -62,7 +62,8 @@ public class ResourceDataEnhancer
         }
 
         String secret = context.getHeaderString(API_SECRET_HEADER);
-        if (secret != null)
+        this.context.setRawSecretData(secret);
+        if (secret != null && this.secretProvider.canCreateSecret())
         {
             try
             {
@@ -96,9 +97,12 @@ public class ResourceDataEnhancer
 
         try
         {
-            this.context.getSecretData()
-                        .map(this.secretProvider::createSecret)
-                        .ifPresent(item -> context.getHeaders().add(API_SECRET_HEADER, item));
+            String secret = this.context.getRawSecretData().orElse(null);
+            if(this.secretProvider.canCreateSecret())
+                secret = this.secretProvider.createSecret(this.context.getSecretData());
+
+            if(secret != null)
+                context.getHeaders().add(API_SECRET_HEADER, secret);
         }
         catch (SecretProviderException exception)
         {

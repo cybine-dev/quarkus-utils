@@ -17,8 +17,9 @@ import static org.hamcrest.CoreMatchers.*;
 
 @QuarkusTest
 @RequiredArgsConstructor
+@DisplayName("SecretProvider")
 @TestProfile(TestProfiles.Integration.class)
-class ApiQueryExtensionProcessorTest
+class ApiSecretTest
 {
     private static final String API_SECRET_HEADER = "x-qu-api-secret";
 
@@ -30,7 +31,8 @@ class ApiQueryExtensionProcessorTest
 
     @Test
     @SuppressWarnings("unchecked")
-    void testSecret( )
+    @DisplayName("can create api-secrets")
+    void canCreateSecret( )
     {
         // @formatter:off
         String secret = RestAssured.given().queryParam("name", "test").queryParam("value", "test")
@@ -46,22 +48,52 @@ class ApiQueryExtensionProcessorTest
                            .extract().body().as(ApiResponse.class);
 
         Assertions.assertEquals("test", response.getValue().get("test"));
-        Assertions.assertFalse(response.getValue().containsKey("test2"));
+        // @formatter:on
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    @DisplayName("can modify api-secrets")
+    void canModifySecret()
+    {
+        // @formatter:off
+        String secret = RestAssured.given().queryParam("name", "test").queryParam("value", "test")
+                                   .when().put(this.secretResourceUrl)
+                                   .then().statusCode(200).header(API_SECRET_HEADER, notNullValue())
+                                   .extract().header(API_SECRET_HEADER);
 
         secret = RestAssured.given().queryParam("name", "test2").queryParam("value", "test")
+                            .and().header(API_SECRET_HEADER, secret)
                             .when().put(this.secretResourceUrl)
                             .then().statusCode(200).header(API_SECRET_HEADER, notNullValue())
                             .extract().header(API_SECRET_HEADER);
 
-        response = RestAssured.given().header(API_SECRET_HEADER, secret)
-                              .when().get(secretResourceUrl)
-                              .then().statusCode(200)
-                              .and().body(notNullValue())
-                              .and().header(API_SECRET_HEADER, notNullValue())
-                              .extract().body().as(ApiResponse.class);
+        ApiResponse<Map<String, Object>> response =
+                RestAssured.given().header(API_SECRET_HEADER, secret)
+                           .when().get(secretResourceUrl)
+                           .then().statusCode(200)
+                           .and().body(notNullValue())
+                           .extract().body().as(ApiResponse.class);
 
         Assertions.assertEquals("test", response.getValue().get("test"));
-        Assertions.assertEquals("test2", response.getValue().get("test"));
+        Assertions.assertEquals("test", response.getValue().get("test2"));
+        // @formatter:on
+    }
+
+    @Test
+    @DisplayName("can reflect api-secrets")
+    void canReflectSecret()
+    {
+        // @formatter:off
+        String secret = RestAssured.given().queryParam("name", "test").queryParam("value", "test")
+                                   .when().put(this.secretResourceUrl)
+                                   .then().statusCode(200).header(API_SECRET_HEADER, notNullValue())
+                                   .extract().header(API_SECRET_HEADER);
+
+        RestAssured.given().header(API_SECRET_HEADER, secret)
+                   .when().get(secretResourceUrl)
+                   .then().statusCode(200)
+                   .and().header(API_SECRET_HEADER, notNullValue());
         // @formatter:on
     }
 }

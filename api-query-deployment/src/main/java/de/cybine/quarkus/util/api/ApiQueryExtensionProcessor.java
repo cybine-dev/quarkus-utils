@@ -55,12 +55,6 @@ public class ApiQueryExtensionProcessor
     }
 
     @BuildStep
-    public AdditionalBeanBuildItem creat4e( )
-    {
-        return new AdditionalBeanBuildItem(ApiQueryConfig.class);
-    }
-
-    @BuildStep
     public AdditionalBeanBuildItem createSecretProvider( )
     {
         return new AdditionalBeanBuildItem(SecretProvider.class);

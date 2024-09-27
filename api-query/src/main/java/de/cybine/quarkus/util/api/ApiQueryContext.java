@@ -15,11 +15,25 @@ public class ApiQueryContext
     @Getter
     private final ApiPaginationInfo paginationInfo = new ApiPaginationInfo();
 
+    private final AtomicReference<String>     rawSecretData = new AtomicReference<>();
     private final AtomicReference<SecretData> secretDataRef = new AtomicReference<>();
 
-    public Optional<SecretData> getSecretData( )
+    public Optional<String> getRawSecretData( )
     {
-        return Optional.ofNullable(this.secretDataRef.get());
+        return Optional.ofNullable(this.rawSecretData.get());
+    }
+
+    public void setRawSecretData(final String rawSecretData)
+    {
+        this.rawSecretData.set(rawSecretData);
+    }
+
+    public SecretData getSecretData( )
+    {
+        if (this.secretDataRef.get() == null)
+            this.secretDataRef.set(SecretData.builder().build());
+
+        return this.secretDataRef.get();
     }
 
     public void setSecretData(final SecretData secretData)
