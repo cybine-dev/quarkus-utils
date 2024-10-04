@@ -11,6 +11,8 @@ import lombok.extern.slf4j.*;
 
 import java.util.*;
 
+import static de.cybine.quarkus.util.api.ApiQueryTask.*;
+
 @Slf4j
 public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
 {
@@ -32,10 +34,7 @@ public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
 
     public List<D> fetch(ApiQuery query)
     {
-        if (!this.context.canExecuteAction(this.dataType, "fetch"))
-            throw new UnauthorizedException();
-
-        DatasourceQuery datasourceQuery = this.getDatasourceQuery(query);
+        DatasourceQuery datasourceQuery = this.getDatasourceQuery(FETCH, query);
         List<D> items = this.fetch(datasourceQuery);
 
         datasourceQuery.getPagination().ifPresent(this::applyPagination);
@@ -45,74 +44,61 @@ public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
 
     public Optional<D> fetchSingle(ApiQuery query)
     {
-        if (!this.context.canExecuteAction(this.dataType, "fetch_single"))
-            throw new UnauthorizedException();
-
-        return this.fetchSingle(this.getDatasourceQuery(query));
+        return this.fetchSingle(this.getDatasourceQuery(FETCH_SINGLE, query));
     }
 
-    public <O> List<O> fetchOptions(ApiOptionQuery query)
+    public List<Map<String, Object>> fetchOptions(ApiQuery query)
     {
-        if (!this.context.canExecuteAction(this.dataType, "options"))
-            throw new UnauthorizedException();
+        DatasourceQuery datasourceQuery = this.getDatasourceQuery(OPTIONS, query);
+        List<Map<String, Object>> options = new ArrayList<>();
+        for (Map<String, Object> option : this.fetchOptions(datasourceQuery))
+        {
+            Map<String, Object> translatedOption = new HashMap<>();
+            for (Map.Entry<String, Object> entry : option.entrySet())
+            {
+                String key = this.apiContext.getTranslations()
+                                            .stream()
+                                            .filter(item -> item.getTranslationOrDefault().equals(entry.getKey()))
+                                            .findAny()
+                                            .map(ApiFieldNameTranslation::getFieldName)
+                                            .orElseThrow(( ) -> new NoSuchElementException(
+                                                    "Unknown field translation: " + entry.getKey()));
 
-        DatasourceQuery datasourceQuery = this.getDatasourceQuery(query);
-        List<O> options = this.fetchOptions(datasourceQuery);
+                translatedOption.put(key, entry.getValue());
+            }
+
+            options.add(translatedOption);
+        }
 
         datasourceQuery.getPagination().ifPresent(this::applyPagination);
 
         return options;
     }
 
-    public List<List<Object>> fetchMultiOptions(ApiOptionQuery query)
+    public List<ApiCountInfo> fetchTotal(ApiQuery query)
     {
-        if (!this.context.canExecuteAction(this.dataType, "options"))
-            throw new UnauthorizedException();
-
-        DatasourceQuery datasourceQuery = this.getDatasourceQuery(query);
-        List<List<Object>> options = this.fetchMultiOptions(datasourceQuery);
-
-        datasourceQuery.getPagination().ifPresent(this::applyPagination);
-
-        return options;
-    }
-
-    public List<ApiCountInfo> fetchTotal(ApiCountQuery query)
-    {
-        if (!this.context.canExecuteAction(this.dataType, "count"))
-            throw new UnauthorizedException();
-
         return this.registry.getProcessor(DatasourceCountInfo.class, ApiCountInfo.class)
-                            .toList(this.fetchTotal(this.getDatasourceQuery(query)))
+                            .withContext(ApiQueryConverter.API_CONTEXT_PROPERTY, this.apiContext)
+                            .toList(this.fetchTotal(this.getDatasourceQuery(COUNT, query)))
                             .result();
     }
 
-    private DatasourceQuery getDatasourceQuery(ApiQuery query)
+    private DatasourceQuery getDatasourceQuery(ApiQueryTask task, ApiQuery query)
     {
-        return this.getDatasourceQuery(ApiQuery.class, query);
-    }
+        if (!this.context.canExecuteAction(this.dataType, task.getAction()))
+            throw new UnauthorizedException();
 
-    private DatasourceQuery getDatasourceQuery(ApiOptionQuery query)
-    {
-        return this.getDatasourceQuery(ApiOptionQuery.class, query);
-    }
-
-    private DatasourceQuery getDatasourceQuery(ApiCountQuery query)
-    {
-        return this.getDatasourceQuery(ApiCountQuery.class, query);
-    }
-
-    private <T> DatasourceQuery getDatasourceQuery(Class<T> type, T query)
-    {
         ConverterConstraint constraint = ConverterConstraint.builder().allowEmptyCollection(true).maxDepth(20).build();
         ConverterTree tree = ConverterTree.builder().constraint(constraint).build();
 
         log.debug("Generating datasource-query from api-query with context '{}'", context);
-        return this.registry.getProcessor(type, DatasourceQuery.class, tree)
+        return this.registry.getProcessor(ApiQuery.class, DatasourceQuery.class, tree)
+                            .withContext(ApiQueryConverter.TASK_PROPERTY, task)
                             .withContext(ApiQueryConverter.CONTEXT_PROPERTY, this.context)
                             .withContext(ApiQueryConverter.ROOT_TYPE_PROPERTY, this.dataType)
                             .withContext(ApiQueryConverter.FIELD_PATH_PROPERTY, "")
                             .withContext(ApiQueryConverter.OBJECT_MAPPER_PROPERTY, this.objectMapper)
+                            .withContext(ApiQueryConverter.API_CONTEXT_PROPERTY, this.apiContext)
                             .toItem(query)
                             .result();
     }

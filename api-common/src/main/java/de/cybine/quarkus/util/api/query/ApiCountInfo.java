@@ -13,7 +13,7 @@ import java.util.*;
 public class ApiCountInfo
 {
     @JsonProperty("key")
-    private final List<?> groupKey;
+    private final Map<String, Object> groupKey;
 
     @JsonProperty("count")
     private final long count;

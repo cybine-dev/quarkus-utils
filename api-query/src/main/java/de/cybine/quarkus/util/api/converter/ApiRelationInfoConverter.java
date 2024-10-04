@@ -9,6 +9,8 @@ import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.datasource.*;
 import lombok.*;
 
+import static de.cybine.quarkus.util.api.converter.ApiQueryConverter.*;
+
 @RequiredArgsConstructor
 public class ApiRelationInfoConverter implements Converter<ApiRelationInfo, DatasourceRelationInfo>
 {
@@ -60,6 +62,7 @@ public class ApiRelationInfoConverter implements Converter<ApiRelationInfo, Data
 
         return DatasourceRelationInfo.builder()
                                      .property(path.toDatasourceFieldPath(steps).asString())
+                                     .fields(resolveDatasourceFields(input.getFields(), helper))
                                      .fetch(input.isFetch())
                                      .condition(helper.toItem(ApiConditionInfo.class, DatasourceConditionInfo.class)
                                                       .map(input::getCondition))

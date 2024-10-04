@@ -63,12 +63,12 @@ public class ContextService
         return this.service.fetchSingle(query);
     }
 
-    public <O> List<O> fetchOptions(ApiOptionQuery query)
+    public List<Map<String, Object>> fetchOptions(ApiQuery query)
     {
         return this.service.fetchOptions(query);
     }
 
-    public List<ApiCountInfo> fetchTotal(ApiCountQuery query)
+    public List<ApiCountInfo> fetchTotal(ApiQuery query)
     {
         return this.service.fetchTotal(query);
     }

@@ -23,8 +23,8 @@ public class DatasourceRelationInfo
 
     private final DatasourceConditionInfo condition;
 
-    @Singular("groupBy")
-    private final List<String> groupingProperties;
+    @Singular("field")
+    private final List<String> fields;
 
     @Singular("order")
     private final List<DatasourceOrderInfo> order;
@@ -37,21 +37,36 @@ public class DatasourceRelationInfo
         return Optional.ofNullable(this.condition);
     }
 
-    public List<Path<Object>> getAllGroupings(Path<?> parent)
+    @SuppressWarnings("java:S1117")
+    public List<String> getAllFields(String parent)
     {
-        Path<?> path = parent.get(this.property);
-        List<Path<Object>> groupings = new ArrayList<>();
-        for (String groupBy : this.groupingProperties)
-            groupings.add(DatasourceFieldPath.resolvePath(path, groupBy));
+        if(!this.isFetch())
+            return Collections.emptyList();
+
+        List<String> fields = new ArrayList<>();
+        for (String field : this.fields)
+            fields.add(parent == null ? field : parent + "." + field);
+
+        for (DatasourceOrderInfo order : this.order)
+        {
+            String fieldName = parent == null ? order.getProperty() : parent + "." + order.getProperty();
+            if(fields.contains(fieldName))
+                continue;
+
+            fields.add(fieldName);
+        }
 
         for (DatasourceRelationInfo relation : this.relations)
-            groupings.addAll(relation.getAllGroupings(path));
+            fields.addAll(relation.getAllFields(parent + "." + relation.getProperty()));
 
-        return groupings;
+        return fields;
     }
 
     public List<BiTuple<Order, Integer>> getAllOrderings(CriteriaBuilder criteriaBuilder, Path<?> parent)
     {
+        if(!this.isFetch())
+            return Collections.emptyList();
+
         Path<?> path = parent.get(this.property);
         List<BiTuple<Order, Integer>> orderings = new ArrayList<>();
         for (DatasourceOrderInfo ordering : this.order)

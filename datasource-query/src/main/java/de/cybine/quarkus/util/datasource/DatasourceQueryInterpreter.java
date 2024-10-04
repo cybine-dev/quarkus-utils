@@ -1,5 +1,6 @@
 package de.cybine.quarkus.util.datasource;
 
+import de.cybine.quarkus.exception.datasource.*;
 import de.cybine.quarkus.util.*;
 import io.quarkus.arc.*;
 import jakarta.persistence.Parameter;
@@ -13,6 +14,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.*;
 
+import static de.cybine.quarkus.util.datasource.DatasourceFieldPath.*;
+
 @Slf4j
 @SuppressWarnings("unused")
 @AllArgsConstructor(staticName = "of")
@@ -23,55 +26,23 @@ public class DatasourceQueryInterpreter<T>
 
     private final EntityManager entityManager;
 
-    public <O> TypedQuery<O> prepareOptionQuery( )
+    @SuppressWarnings("rawtypes")
+    public TypedQuery<List> prepareOptionQuery( )
     {
-        // @formatter:off
-        if (this.datasourceQuery.getProperties().size() > 1)
-            log.warn("Fetching options for datasource-query with more than one property defined: " +
-                    "Only the first property will be used for this query.");
-        // @formatter:on
-
-        return this.prepareOptionQuery(this.datasourceQuery.getFirstProperty().orElseThrow());
-    }
-
-    @SuppressWarnings("unchecked")
-    private <O> TypedQuery<O> prepareOptionQuery(String fieldName)
-    {
-        CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
-        CriteriaQuery<Object> query = criteriaBuilder.createQuery();
-        Root<T> root = query.from(this.type);
-
-        query.select(root.get(fieldName))
-             .distinct(true)
-             .where(this.datasourceQuery.getConditions(criteriaBuilder, root).toArray(Predicate[]::new))
-             .orderBy(this.datasourceQuery.getSortedOrderings(criteriaBuilder, root));
-
-        TypedQuery<Object> typedQuery = this.entityManager.createQuery(query);
-
-        List<BiTuple<String, Object>> parameters = this.datasourceQuery.getParameters();
-        parameters.forEach(parameter -> typedQuery.setParameter(parameter.first(), parameter.second()));
-
-        DatasourcePaginationInfo pagination = this.datasourceQuery.getPagination().orElse(null);
-        if (pagination != null)
-        {
-            pagination.getSize().ifPresent(typedQuery::setMaxResults);
-            pagination.getOffset().ifPresent(typedQuery::setFirstResult);
-
-            if (pagination.includeTotal())
-                pagination.setTotal(this.executeResultCountQuery(parameters, List.of(fieldName)));
-        }
-
-        return (TypedQuery<O>) typedQuery;
+        return this.prepareOptionQuery(this.datasourceQuery.getFields());
     }
 
     @SuppressWarnings("rawtypes")
-    public TypedQuery<List> prepareMultiOptionQuery( )
+    private TypedQuery<List> prepareOptionQuery(List<String> fieldNames)
     {
+        if (fieldNames == null || fieldNames.isEmpty())
+            throw new InvalidQueryException("At least one field must be queried");
+
         CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
         CriteriaQuery<List> query = criteriaBuilder.createQuery(List.class);
         Root<T> root = query.from(this.type);
 
-        query.multiselect((Selection<?>) this.datasourceQuery.getProperties().stream().map(root::get).toList())
+        query.multiselect(fieldNames.stream().map(item -> resolvePath(root, item)).toArray(Selection[]::new))
              .distinct(true)
              .where(this.datasourceQuery.getConditions(criteriaBuilder, root).toArray(Predicate[]::new))
              .orderBy(this.datasourceQuery.getSortedOrderings(criteriaBuilder, root));
@@ -88,7 +59,8 @@ public class DatasourceQueryInterpreter<T>
             pagination.getOffset().ifPresent(typedQuery::setFirstResult);
 
             if (pagination.includeTotal())
-                pagination.setTotal(this.executeResultCountQuery(parameters, this.datasourceQuery.getProperties()));
+                pagination.setTotal(
+                        this.executeResultCountQuery(parameters, new HashSet<>(this.datasourceQuery.getFields())));
         }
 
         return typedQuery;
@@ -100,14 +72,16 @@ public class DatasourceQueryInterpreter<T>
         CriteriaQuery<Object[]> query = criteriaBuilder.createQuery(Object[].class);
         Root<T> root = query.from(this.type);
 
-        List<Path<?>> grouping = this.datasourceQuery.getGroupings(root);
+        List<String> groupingNames = this.datasourceQuery.getFields();
+        List<Path<?>> grouping = this.resolvePaths(root, groupingNames);
         List<Selection<?>> selection = new ArrayList<>();
         selection.add(criteriaBuilder.count(root));
         selection.addAll(grouping);
 
         query.multiselect(selection)
              .where(this.datasourceQuery.getConditions(criteriaBuilder, root).toArray(Predicate[]::new))
-             .groupBy(new ArrayList<>(grouping));
+             .groupBy(new ArrayList<>(grouping))
+             .orderBy(this.datasourceQuery.getSortedOrderings(criteriaBuilder, root));
 
         TypedQuery<Object[]> typedQuery = this.entityManager.createQuery(query)
                                                             .setHint(SpecHints.HINT_SPEC_FETCH_GRAPH,
@@ -121,8 +95,9 @@ public class DatasourceQueryInterpreter<T>
                          .stream()
                          .map(item -> DatasourceCountInfo.builder()
                                                          .count((long) item[ 0 ])
-                                                         .groupKey(grouping.isEmpty() ? Collections.emptyList() :
-                                                                 Arrays.asList(item).subList(1, item.length))
+                                                         .groupKey(grouping.isEmpty() ? Collections.emptyMap() :
+                                                                 interconnectOptions(groupingNames,
+                                                                         Arrays.asList(item).subList(1, item.length)))
                                                          .build())
                          .toList();
     }
@@ -132,11 +107,11 @@ public class DatasourceQueryInterpreter<T>
         if (this.datasourceQuery.getRelations().stream().noneMatch(DatasourceRelationInfo::isFetch))
             return this.prepareRegularDataQuery();
 
-        Field idField = this.findIdField().orElse(null);
-        if (idField == null)
+        List<Field> idFields = this.getIdFields();
+        if (idFields.isEmpty())
             return this.prepareRegularDataQuery();
 
-        return this.prepareIdDataQuery(idField);
+        return this.prepareIdDataQuery(idFields);
     }
 
     @SuppressWarnings("rawtypes")
@@ -155,13 +130,66 @@ public class DatasourceQueryInterpreter<T>
              .orderBy(this.datasourceQuery.getSortedOrderings(criteriaBuilder, root));
 
         EntityGraph<T> graph = this.getRelationGraph();
-        List<Object> ids = this.prepareOptionQuery(idField.getName()).getResultList();
+        List<Object> ids = this.prepareOptionQuery(List.of(idField.getName()))
+                               .getResultStream()
+                               .map(item -> item.get(0))
+                               .toList();
+
         TypedQuery<T> typedQuery = this.entityManager.createQuery(query)
                                                      .setParameter(idParameter, ids)
                                                      .setHint(SpecHints.HINT_SPEC_FETCH_GRAPH, graph)
                                                      .setHint(HibernateHints.HINT_READ_ONLY, true);
 
         List<BiTuple<String, Object>> parameters = this.datasourceQuery.getParameters();
+        parameters.forEach(parameter -> typedQuery.setParameter(parameter.first(), parameter.second()));
+
+        return typedQuery;
+    }
+
+    @SuppressWarnings("unchecked")
+    private TypedQuery<T> prepareIdDataQuery(List<Field> idFields)
+    {
+        if (idFields.size() == 1)
+            return this.prepareIdDataQuery(idFields.get(0));
+
+        CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
+        CriteriaQuery<T> query = criteriaBuilder.createQuery(this.type);
+        Root<T> root = query.from(this.type);
+
+        List<String> idFieldNames = idFields.stream().map(Field::getName).toList();
+        List<Map<String, Object>> ids = this.prepareOptionQuery(idFieldNames)
+                                            .getResultStream()
+                                            .map(item -> interconnectOptions(idFieldNames, item))
+                                            .map(item -> (Map<String, Object>) item)
+                                            .toList();
+
+        List<BiTuple<String, Object>> parameters = this.datasourceQuery.getParameters();
+        List<Predicate> conditions = this.datasourceQuery.getConditions(criteriaBuilder, root);
+        for (Map<String, Object> item : ids)
+        {
+            String rowId = UUID.randomUUID().toString();
+            List<Predicate> rowConditions = new ArrayList<>();
+            for (Field field : idFields)
+            {
+                String parameterName = field.getName() + "--" + rowId;
+                ParameterExpression<?> parameter = criteriaBuilder.parameter(field.getType(), parameterName);
+                rowConditions.add(criteriaBuilder.equal(root.get(field.getName()), parameter));
+
+                parameters.add(new BiTuple<>(parameterName, item.get(parameterName)));
+            }
+
+            conditions.add(criteriaBuilder.or(rowConditions.toArray(Predicate[]::new)));
+        }
+
+        query.select(root)
+             .where(conditions.toArray(Predicate[]::new))
+             .orderBy(this.datasourceQuery.getSortedOrderings(criteriaBuilder, root));
+
+        EntityGraph<T> graph = this.getRelationGraph();
+        TypedQuery<T> typedQuery = this.entityManager.createQuery(query)
+                                                     .setHint(SpecHints.HINT_SPEC_FETCH_GRAPH, graph)
+                                                     .setHint(HibernateHints.HINT_READ_ONLY, true);
+
         parameters.forEach(parameter -> typedQuery.setParameter(parameter.first(), parameter.second()));
 
         return typedQuery;
@@ -200,10 +228,10 @@ public class DatasourceQueryInterpreter<T>
 
     private Long executeResultCountQuery(List<BiTuple<String, Object>> parameters)
     {
-        return this.executeResultCountQuery(parameters, Collections.emptyList());
+        return this.executeResultCountQuery(parameters, Collections.emptySet());
     }
 
-    private Long executeResultCountQuery(List<BiTuple<String, Object>> parameters, List<String> properties)
+    private Long executeResultCountQuery(List<BiTuple<String, Object>> parameters, Set<String> properties)
     {
         CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
         CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
@@ -212,8 +240,12 @@ public class DatasourceQueryInterpreter<T>
         query.select(criteriaBuilder.countDistinct(root))
              .where(this.datasourceQuery.getConditions(criteriaBuilder, root).toArray(Predicate[]::new));
 
-        String idFieldName = this.findIdField().map(Field::getName).orElse(null);
-        if (!properties.isEmpty() && (idFieldName == null || !properties.contains(idFieldName)))
+        List<String> idFieldNames = this.getIdFields().stream().map(Field::getName).toList();
+        boolean propertiesAreDifferentFromIdFields =
+                !properties.isEmpty() && (idFieldNames.isEmpty() || !properties.containsAll(
+                idFieldNames));
+
+        if (propertiesAreDifferentFromIdFields)
             query.groupBy(properties.stream().map(root::get).collect(Collectors.toList()));
 
         TypedQuery<Long> typedQuery = this.entityManager.createQuery(query);
@@ -230,16 +262,24 @@ public class DatasourceQueryInterpreter<T>
         return graph;
     }
 
-    private Optional<Field> findIdField( )
+    private List<Field> getIdFields( )
     {
-        List<Field> idFields = Arrays.stream(this.type.getDeclaredFields())
-                                     .filter(item -> item.isAnnotationPresent(Id.class))
-                                     .toList();
+        return Arrays.stream(this.type.getDeclaredFields()).filter(item -> item.isAnnotationPresent(Id.class)).toList();
+    }
 
-        if (idFields.size() != 1)
-            return Optional.empty();
+    @SuppressWarnings("java:S6204")
+    private List<Path<?>> resolvePaths(Root<?> root, List<String> fieldNames)
+    {
+        return fieldNames.stream().map(item -> resolvePath(root, item)).collect(Collectors.toList());
+    }
 
-        return Optional.of(idFields.get(0));
+    public static Map<String, Object> interconnectOptions(List<String> fieldNames, List<Object> row)
+    {
+        Map<String, Object> result = new HashMap<>();
+        for (int i = 0; i < fieldNames.size(); i++)
+            result.put(fieldNames.get(i), row.get(i));
+
+        return result;
     }
 
     public static <T> DatasourceQueryInterpreter<T> of(Class<T> type, DatasourceQuery query)

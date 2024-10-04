@@ -35,15 +35,16 @@ public class ApiFieldPath
         return this.path.stream().map(ApiField::getName).collect(Collectors.joining("."));
     }
 
-    public DatasourceFieldPath toDatasourceFieldPath( )
+    public DatasourceFieldPath toFullDatasourceFieldPath( )
     {
-        return this.toDatasourceFieldPath(1);
+        return this.toDatasourceFieldPath(this.path.size());
     }
 
+    @SuppressWarnings("java:S1117")
     public DatasourceFieldPath toDatasourceFieldPath(int steps)
     {
         int start = this.path.size() - steps;
-        if(start < 0)
+        if (start < 0)
             start = 0;
 
         List<ApiField> path = this.path.subList(start, this.path.size());
@@ -52,5 +53,10 @@ public class ApiFieldPath
             builder.field(field.getDatasourceField());
 
         return builder.build();
+    }
+
+    public ApiFieldNameTranslation getTranslation( )
+    {
+        return ApiFieldNameTranslation.of(this.asString(), this.toFullDatasourceFieldPath().asString());
     }
 }

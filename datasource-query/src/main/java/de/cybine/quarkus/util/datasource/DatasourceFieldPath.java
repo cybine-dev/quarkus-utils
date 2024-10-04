@@ -42,9 +42,7 @@ public class DatasourceFieldPath
     {
         Path<?> field = parent;
         for(String fieldPath : path.split("\\."))
-        {
             field = field.get(fieldPath);
-        }
 
         return (Path<T>) field;
     }

@@ -25,6 +25,6 @@ public class ConverterExtensionProcessor
     @BuildStep
     public AdditionalBeanBuildItem createConverterRegistry( )
     {
-        return new AdditionalBeanBuildItem(ConverterRegistry.class);
+        return AdditionalBeanBuildItem.unremovableOf(ConverterRegistry.class);
     }
 }

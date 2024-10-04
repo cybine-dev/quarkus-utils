@@ -4,6 +4,8 @@ import lombok.*;
 
 import java.util.*;
 
+import static de.cybine.quarkus.util.datasource.DatasourceQueryInterpreter.*;
+
 @SuppressWarnings("unused")
 @RequiredArgsConstructor(staticName = "forType")
 public class GenericDatasourceRepository<T>
@@ -20,18 +22,14 @@ public class GenericDatasourceRepository<T>
         return DatasourceQueryInterpreter.of(this.type, query).prepareDataQuery().getResultStream().findAny();
     }
 
-    public <O> List<O> fetchOptions(DatasourceQuery query)
-    {
-        return DatasourceQueryInterpreter.of(this.type, query).<O>prepareOptionQuery().getResultList();
-    }
-
     @SuppressWarnings("unchecked")
-    public List<List<Object>> fetchMultiOptions(DatasourceQuery query)
+    public List<Map<String, Object>> fetchOptions(DatasourceQuery query)
     {
         return DatasourceQueryInterpreter.of(this.type, query)
-                                         .prepareMultiOptionQuery()
+                                         .prepareOptionQuery()
                                          .getResultStream()
-                                         .map(item -> (List<Object>) item)
+                                         .map(item -> interconnectOptions(query.getFields(), item))
+                                         .map(item -> (Map<String, Object>) item)
                                          .toList();
     }
 

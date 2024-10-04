@@ -18,6 +18,8 @@ public class ApiQueryContext
     private final AtomicReference<String>     rawSecretData = new AtomicReference<>();
     private final AtomicReference<SecretData> secretDataRef = new AtomicReference<>();
 
+    private final List<ApiFieldNameTranslation> translations = new ArrayList<>();
+
     public Optional<String> getRawSecretData( )
     {
         return Optional.ofNullable(this.rawSecretData.get());
@@ -39,5 +41,15 @@ public class ApiQueryContext
     public void setSecretData(final SecretData secretData)
     {
         this.secretDataRef.set(secretData);
+    }
+
+    public List<ApiFieldNameTranslation> getTranslations()
+    {
+        return new ArrayList<>(this.translations);
+    }
+
+    public void addTranslation(final ApiFieldNameTranslation translation)
+    {
+        this.translations.add(translation);
     }
 }

@@ -1,6 +1,7 @@
 package de.cybine.quarkus.util.api;
 
 import de.cybine.quarkus.config.*;
+import de.cybine.quarkus.exception.api.handler.*;
 import de.cybine.quarkus.util.api.permission.*;
 import de.cybine.quarkus.util.api.secret.*;
 import io.quarkus.arc.deployment.*;
@@ -40,6 +41,12 @@ public class ApiQueryExtensionProcessor
     public CustomContainerResponseFilterBuildItem createResponseDataEnhancer( )
     {
         return new CustomContainerResponseFilterBuildItem(ResourceDataEnhancer.class.getName());
+    }
+
+    @BuildStep
+    public CustomContainerResponseFilterBuildItem createServiceExceptionHandler( )
+    {
+        return new CustomContainerResponseFilterBuildItem(ServiceExceptionHandler.class.getName());
     }
 
     @BuildStep

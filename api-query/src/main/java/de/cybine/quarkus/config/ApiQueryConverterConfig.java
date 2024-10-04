@@ -21,12 +21,8 @@ public class ApiQueryConverterConfig
         this.registry.addConverter(new ApiConditionDetailTypeConverter());
         this.registry.addConverter(new ApiConditionEvaluationMethodConverter());
         this.registry.addConverter(new ApiConditionInfoConverter());
-        this.registry.addConverter(new ApiCountQueryConverter());
-        this.registry.addConverter(new ApiCountRelationConverter());
         this.registry.addConverter(new ApiQueryConverter());
-        this.registry.addConverter(new ApiOptionQueryConverter());
         this.registry.addConverter(new ApiOrderInfoConverter());
-        this.registry.addConverter(new ApiOptionQueryConverter());
         this.registry.addConverter(new ApiPaginationInfoConverter());
         this.registry.addConverter(new ApiRelationInfoConverter(this.config));
         this.registry.addEntityMapper(new CountInfoMapper());

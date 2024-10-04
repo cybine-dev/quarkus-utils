@@ -17,6 +17,11 @@ public class ApiQuery
     public static final String GROUP_CAPABILITY  = "query:group_by";
     public static final String ORDER_CAPABILITY  = "query:order";
 
+    @Singular
+    @JsonAlias("group_by")
+    @JsonProperty("fields")
+    private final List<String> fields;
+
     @Valid
     @JsonProperty("pagination")
     private final ApiQueryPagination pagination;

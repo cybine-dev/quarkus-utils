@@ -26,6 +26,11 @@ public class ApiRelationInfo
     @JsonProperty("condition")
     private final ApiConditionInfo condition;
 
+    @Singular
+    @JsonAlias("group_by")
+    @JsonProperty("fields")
+    private final List<String> fields;
+
     @Valid
     @Singular("order")
     @JsonProperty("order")

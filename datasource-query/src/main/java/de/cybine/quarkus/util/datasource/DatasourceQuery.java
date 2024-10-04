@@ -17,10 +17,7 @@ public class DatasourceQuery
     private final DatasourceConditionInfo condition;
 
     @Singular
-    private final List<String> properties;
-
-    @Singular("groupBy")
-    private final List<String> groupingProperties;
+    private final List<String> fields;
 
     @Singular("order")
     private final List<DatasourceOrderInfo> order;
@@ -38,24 +35,30 @@ public class DatasourceQuery
         return Optional.ofNullable(this.condition);
     }
 
-    public Optional<String> getFirstProperty( )
+    public Optional<String> getFirstField( )
     {
-        if (this.properties.isEmpty())
+        if (this.fields.isEmpty())
             return Optional.empty();
 
-        return Optional.of(this.properties.get(0));
+        return Optional.of(this.fields.get(0));
     }
 
-    public List<Path<?>> getGroupings(Root<?> root)
+    @SuppressWarnings("java:S1117")
+    public List<String> getFields( )
     {
-        List<Path<?>> groupings = new ArrayList<>();
-        for (String groupBy : this.groupingProperties)
-            groupings.add(DatasourceFieldPath.resolvePath(root, groupBy));
-
+        List<String> fields = new ArrayList<>(this.fields);
         for (DatasourceRelationInfo relation : this.relations)
-            groupings.addAll(relation.getAllGroupings(root));
+            fields.addAll(relation.getAllFields(null));
 
-        return groupings;
+        for (DatasourceOrderInfo order : this.order)
+        {
+            if(fields.contains(order.getProperty()))
+                continue;
+
+            fields.add(order.getProperty());
+        }
+
+        return fields;
     }
 
     public List<Order> getSortedOrderings(CriteriaBuilder criteriaBuilder, Root<?> root)

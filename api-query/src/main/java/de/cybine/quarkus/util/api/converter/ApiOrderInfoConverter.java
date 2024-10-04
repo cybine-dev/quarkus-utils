@@ -32,9 +32,12 @@ public class ApiOrderInfoConverter implements Converter<ApiOrderInfo, Datasource
         // TODO: Update to use Scopes
         ApiField field = path.getLast();
         ApiFieldResolverContext context = helper.getContextOrThrow(ApiQueryConverter.CONTEXT_PROPERTY);
-        if (!context.hasAnyCapability(field.getObjectType(), ApiQuery.SEARCH_CAPABILITY, field.getName()))
+        if (!context.hasAnyCapability(field.getObjectType(), ApiQuery.ORDER_CAPABILITY, field.getName()))
             throw new MissingCapabilityException(String.format("Cannot search for '%s'", path.asString())).addData(
                     "path", path.asString());
+
+        ApiQueryContext apiContext = helper.getContextOrThrow(ApiQueryConverter.API_CONTEXT_PROPERTY);
+        apiContext.addTranslation(path.getTranslation());
 
         return DatasourceOrderInfo.builder()
                                   .property(path.toDatasourceFieldPath(steps).asString())

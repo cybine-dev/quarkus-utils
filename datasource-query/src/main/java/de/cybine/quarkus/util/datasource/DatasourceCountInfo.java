@@ -10,7 +10,7 @@ import java.util.*;
 public class DatasourceCountInfo
 {
     @Singular("key")
-    private final List<?> groupKey;
+    private final Map<String, Object> groupKey;
 
     private final long count;
 }

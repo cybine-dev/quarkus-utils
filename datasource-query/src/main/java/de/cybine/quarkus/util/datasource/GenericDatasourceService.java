@@ -40,14 +40,9 @@ public class GenericDatasourceService<E, D>
         return this.repository.fetchSingle(query);
     }
 
-    public <O> List<O> fetchOptions(DatasourceQuery query)
+    public List<Map<String, Object>> fetchOptions(DatasourceQuery query)
     {
         return this.repository.fetchOptions(query);
-    }
-
-    public List<List<Object>> fetchMultiOptions(DatasourceQuery query)
-    {
-        return this.repository.fetchMultiOptions(query);
     }
 
     public List<DatasourceCountInfo> fetchTotal(DatasourceQuery query)

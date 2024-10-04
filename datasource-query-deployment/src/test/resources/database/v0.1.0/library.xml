@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="json.type" value="JSON"/>
+    <property name="uuid.type" value="BINARY(16)" dbms="mariadb"/>
+    <property name="uuid.type" value="UUID"/>
+
+    <changeSet id="v0.1.0-customer-setup" author="boelter.fabio">
+        <createTable tableName="customer">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="firstname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lastname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="customer">
+            <column name="id">1</column>
+            <column name="firstname">Bart</column>
+            <column name="lastname">Woods</column>
+        </insert>
+        <insert tableName="customer">
+            <column name="id">2</column>
+            <column name="firstname">Wilbert</column>
+            <column name="lastname">Bray</column>
+        </insert>
+        <insert tableName="customer">
+            <column name="id">3</column>
+            <column name="firstname">Allan</column>
+            <column name="lastname">Bray</column>
+        </insert>
+    </changeSet>
+
+    <changeSet id="v0.1.0-library-setup" author="boelter.fabio">
+        <createTable tableName="library">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="library">
+            <column name="id">1</column>
+            <column name="name">Stadtbücherei Bad Mergentheim</column>
+            <column name="address">Bahnhofplatz 1, 97980 Bad Mergentheim</column>
+        </insert>
+        <insert tableName="library">
+            <column name="id">2</column>
+            <column name="name">Universitätsbibliothek Würzburg</column>
+            <column name="address">Hubland Süd, Geb. Z4, Am Hubland, 97074 Würzburg</column>
+        </insert>
+    </changeSet>
+
+    <changeSet id="v0.1.0-asset-setup" author="boelter.fabio">
+        <createTable tableName="asset">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="library_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+        </createTable>
+        <createIndex tableName="asset" indexName="asset-external_id">
+            <column name="external_id"/>
+        </createIndex>
+
+        <createTable tableName="asset_rental">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="asset_id" type="${uuid.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="begins_at" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ends_at" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="returned_at" type="DATETIME"/>
+        </createTable>
+
+        <insert tableName="asset">
+            <column name="id" type="${uuid.type}" value="01924362448a771aba8fd3277d7f02f8"/>
+            <column name="external_id" value="978-1-4215-8766-0"/>
+            <column name="library_id" value="1"/>
+            <column name="name" value="Haikyu!!, Vol. 1"/>
+        </insert>
+        <insert tableName="asset">
+            <column name="id" type="${uuid.type}" value="01924362448a730ebc2d18044c5c6e3d"/>
+            <column name="external_id" value="978-3-551-75303-8"/>
+            <column name="library_id" value="1"/>
+            <column name="name" value="Black Butler Band 1"/>
+        </insert>
+        <insert tableName="asset">
+            <column name="id" type="${uuid.type}" value="01924362448a74f5a0a040b4730e9063" />
+            <column name="external_id" value="978-3-551-35401-3"/>
+            <column name="library_id" value="1"/>
+            <column name="name" value="Harry Potter und der Stein der Weisen"/>
+        </insert>
+        <insert tableName="asset">
+            <column name="id" type="${uuid.type}" value="01924362448a71cf9ad6228cda014c51" />
+            <column name="library_id" value="1"/>
+            <column name="name" value="Pixels"/>
+        </insert>
+
+        <insert tableName="asset_rental">
+            <column name="id" type="${uuid.type}" value="01924362448a7fe09c027c14acfd517b"/>
+            <column name="asset_id" type="${uuid.type}" value="01924362448a771aba8fd3277d7f02f8"/>
+            <column name="customer_id" value="1"/>
+            <column name="begins_at" value="2024-03-09"/>
+            <column name="ends_at" value="2024-03-23"/>
+            <column name="returned_at" value="2024-03-12T12:37:23"/>
+        </insert>
+        <insert tableName="asset_rental">
+            <column name="id" type="${uuid.type}" value="01924362448a778096a526b1cdcb1c14"/>
+            <column name="asset_id" type="${uuid.type}" value="01924362448a730ebc2d18044c5c6e3d"/>
+            <column name="customer_id" value="1"/>
+            <column name="begins_at" value="2024-03-09"/>
+            <column name="ends_at" value="2024-03-23"/>
+            <column name="returned_at" value="2024-03-12T12:37:26"/>
+        </insert>
+        <insert tableName="asset_rental">
+            <column name="id" type="${uuid.type}" value="01924362448a711188d03314d8538eab" />
+            <column name="asset_id" type="${uuid.type}" value="01924362448a74f5a0a040b4730e9063"/>
+            <column name="customer_id" value="2"/>
+            <column name="begins_at" value="2024-08-04"/>
+            <column name="ends_at" value="2024-08-18"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
