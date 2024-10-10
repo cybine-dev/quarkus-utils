@@ -63,7 +63,7 @@ public class ResourceDataEnhancer
 
         String secret = context.getHeaderString(API_SECRET_HEADER);
         this.context.setRawSecretData(secret);
-        if (secret != null && this.secretProvider.canCreateSecret())
+        if (secret != null && this.secretProvider.canReadSecret())
         {
             try
             {
