@@ -1,11 +1,11 @@
 [versions]
-quarkus = "3.6.6"
+quarkus = "3.15.1"
 
 [libraries]
 quarkus-bom = { group = "io.quarkus.platform", name = "quarkus-bom", version.ref = "quarkus" }
-uuid-generator = { group = "com.fasterxml.uuid", name = "java-uuid-generator", version = "4.1.0" }
+uuid-generator = { group = "com.fasterxml.uuid", name = "java-uuid-generator", version = "5.1.0" }
 
 [plugins]
-jandex = { id = "org.kordamp.gradle.jandex", version = "1.1.0" }
+jandex = { id = "org.kordamp.gradle.jandex", version = "2.0.0" }
 quarkus = { id = "io.quarkus.extension", version.ref = "quarkus" }
-lombok = { id = "io.freefair.lombok", version = "8.4" }
+lombok = { id = "io.freefair.lombok", version = "8.10.2" }

@@ -4,6 +4,7 @@ import de.cybine.quarkus.exception.datasource.*;
 import de.cybine.quarkus.util.*;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.*;
+import jakarta.persistence.criteria.Order;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.query.*;
