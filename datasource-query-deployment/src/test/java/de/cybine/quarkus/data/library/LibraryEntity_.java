@@ -9,7 +9,7 @@ import lombok.experimental.*;
 @StaticMetamodel(LibraryEntity.class)
 public class LibraryEntity_
 {
-    public static final String TABLE  = "library";
+    public static final String TABLE  = "$dq.test";
     public static final String ENTITY = "Library";
 
     public static final String ID_COLUMN      = "id";
