@@ -163,8 +163,8 @@ public class DatasourceQueryInterpreter<T>
                                             .map(item -> (Map<String, Object>) item)
                                             .toList();
 
+        List<Predicate> idConditions = new ArrayList<>();
         List<BiTuple<String, Object>> parameters = this.datasourceQuery.getParameters();
-        List<Predicate> conditions = this.datasourceQuery.getConditions(criteriaBuilder, root);
         for (Map<String, Object> item : ids)
         {
             String rowId = UUID.randomUUID().toString();
@@ -175,11 +175,14 @@ public class DatasourceQueryInterpreter<T>
                 ParameterExpression<?> parameter = criteriaBuilder.parameter(field.getType(), parameterName);
                 rowConditions.add(criteriaBuilder.equal(root.get(field.getName()), parameter));
 
-                parameters.add(new BiTuple<>(parameterName, item.get(parameterName)));
+                parameters.add(new BiTuple<>(parameterName, item.get(field.getName())));
             }
 
-            conditions.add(criteriaBuilder.or(rowConditions.toArray(Predicate[]::new)));
+            idConditions.add(criteriaBuilder.and(rowConditions.toArray(Predicate[]::new)));
         }
+
+        List<Predicate> conditions = this.datasourceQuery.getConditions(criteriaBuilder, root);
+        conditions.add(criteriaBuilder.or(idConditions.toArray(Predicate[]::new)));
 
         query.select(root)
              .where(conditions.toArray(Predicate[]::new))
