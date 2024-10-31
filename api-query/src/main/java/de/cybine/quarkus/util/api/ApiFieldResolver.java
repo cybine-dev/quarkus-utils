@@ -69,7 +69,6 @@ public class ApiFieldResolver
     @DefaultBean
     @Unremovable
     @RequestScoped
-    @SneakyThrows
     public ApiFieldResolverContext getUserContext( )
     {
         if (this.securityIdentity == null)
