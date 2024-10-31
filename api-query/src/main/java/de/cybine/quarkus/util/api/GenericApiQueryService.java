@@ -91,7 +91,7 @@ public class GenericApiQueryService<E, D> extends GenericDatasourceService<E, D>
         ConverterConstraint constraint = ConverterConstraint.builder().allowEmptyCollection(true).maxDepth(20).build();
         ConverterTree tree = ConverterTree.builder().constraint(constraint).build();
 
-        log.debug("Generating datasource-query from api-query with context '{}'", context);
+        log.debug("Generating datasource-query from api-query with context '{}'", this.context.getContextName());
         return this.registry.getProcessor(ApiQuery.class, DatasourceQuery.class, tree)
                             .withContext(ApiQueryConverter.TASK_PROPERTY, task)
                             .withContext(ApiQueryConverter.CONTEXT_PROPERTY, this.context)
