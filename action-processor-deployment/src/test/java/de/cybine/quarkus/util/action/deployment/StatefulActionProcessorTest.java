@@ -11,6 +11,7 @@ import de.cybine.quarkus.util.action.stateful.*;
 import de.cybine.quarkus.util.converter.*;
 import de.cybine.quarkus.util.test.*;
 import io.quarkus.arc.*;
+import io.quarkus.test.*;
 import io.quarkus.test.junit.*;
 import lombok.*;
 import org.junit.jupiter.api.*;
@@ -48,6 +49,7 @@ class StatefulActionProcessorTest
     }
 
     @Test
+    @TestTransaction
     @DisplayName("Workflow initializes successfully")
     void testWorkflowInitiation( )
     {

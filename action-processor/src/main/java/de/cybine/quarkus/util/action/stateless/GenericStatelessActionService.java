@@ -4,6 +4,7 @@ import de.cybine.quarkus.exception.action.*;
 import de.cybine.quarkus.util.action.*;
 import de.cybine.quarkus.util.action.data.*;
 import io.quarkus.security.identity.*;
+import jakarta.enterprise.inject.*;
 import jakarta.inject.*;
 import lombok.*;
 import lombok.extern.slf4j.*;
@@ -18,7 +19,7 @@ public class GenericStatelessActionService implements StatelessActionService
 {
     private final List<ActionProcessor> processors = new ArrayList<>();
 
-    private final SecurityIdentity securityIdentity;
+    private final Instance<SecurityIdentity> securityIdentityRef;
 
     @Override
     public void registerProcessor(ActionProcessor processor)
@@ -54,7 +55,7 @@ public class GenericStatelessActionService implements StatelessActionService
             throw new UnknownActionException(String.format("Action of type %s is unknown", action.toShortForm()));
 
         ActionMetadata metadata = action.getMetadata();
-        ActionHelper helper = new ActionHelper(this, metadata, null, this.securityIdentity, null);
+        ActionHelper helper = new ActionHelper(this, metadata, null, this.securityIdentityRef.get(), null);
         if (!processor.hasPermission(action, helper))
             throw new UnauthorizedActionException("Executor is not allowed to perform this action.");
 
