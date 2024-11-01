@@ -8,6 +8,7 @@ import de.cybine.quarkus.exception.api.*;
 import de.cybine.quarkus.util.api.*;
 import jakarta.inject.*;
 import jakarta.ws.rs.container.*;
+import jakarta.ws.rs.core.*;
 import lombok.*;
 import lombok.extern.slf4j.*;
 
@@ -28,6 +29,9 @@ public class ApiFieldResponseFilter implements ResponseFilter
     @Override
     public void apply(ContainerResponseContext response)
     {
+        if (response.getMediaType() != MediaType.APPLICATION_JSON_TYPE)
+            return;
+
         try
         {
             Object entity = response.getEntity();
