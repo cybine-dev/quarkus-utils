@@ -31,6 +31,8 @@ public class SecretProvider
     private static final String IDENTITY = "quarkus-utils:api-query";
     private static final String CLAIM    = "quarkus-utils.secret";
 
+    public static final String API_SECRET_HEADER = "X-Qu-Api-Secret";
+
     private final ApiQueryConfig config;
 
     private final JWTParser    parser;
@@ -43,17 +45,27 @@ public class SecretProvider
         JwtClaimsBuilder builder = Jwt.issuer(IDENTITY)
                                       .audience(IDENTITY)
                                       .issuedAt(Instant.now())
+                                      .expiresIn(this.config.secretProvider().tokenValidity())
                                       .claim(CLAIM, this.encryptValue(data));
 
-        if (!this.securityIdentityRef.isResolvable() && !this.config.secretProvider().allowEmptySubject())
-            throw new SecretProviderException("Cannot create secret without user identity");
+        if (!this.securityIdentityRef.isResolvable())
+        {
+            log.trace("No security identity found");
+            if (!this.config.secretProvider().allowEmptySubject())
+                throw new SecretProviderException("Cannot create secret without user identity");
+        }
 
         if (this.securityIdentityRef.isResolvable())
         {
             SecurityIdentity identity = this.securityIdentityRef.get();
-            if (identity.isAnonymous() && !this.config.secretProvider().allowEmptySubject())
-                throw new SecretProviderException("Cannot create secret without user identity");
+            if (identity.isAnonymous())
+            {
+                log.trace("Security identity is anonymous");
+                if (!this.config.secretProvider().allowEmptySubject())
+                    throw new SecretProviderException("Cannot create secret without user identity");
+            }
 
+            log.trace("Security identity has principal: {}", identity.getPrincipal().getName());
             builder.subject(identity.getPrincipal().getName());
         }
 
@@ -76,18 +88,29 @@ public class SecretProvider
         if (subject != null)
         {
             if (!this.securityIdentityRef.isResolvable())
+            {
+                log.trace("No security identity found");
                 throw new SecretProviderException("Cannot read secret: Invalid user identity");
+            }
 
             SecurityIdentity identity = this.securityIdentityRef.get();
             Principal principal = identity.getPrincipal();
             boolean isAnonymous = identity.isAnonymous() || principal == null;
-            if (isAnonymous && !this.config.secretProvider().allowEmptySubject())
-                throw new SecretProviderException("Cannot read secret: Invalid user identity");
+            if (isAnonymous)
+            {
+                log.trace("Security identity is anonymous");
+                if (!this.config.secretProvider().allowEmptySubject())
+                    throw new SecretProviderException("Cannot read secret: Invalid user identity");
+            }
 
             if (!isAnonymous && !principal.getName().equals(subject))
+            {
+                log.trace("Security identity does not match token identity");
                 throw new SecretProviderException("Cannot read secret: Invalid user identity");
+            }
         }
 
+        log.trace("Decrypting secret");
         return this.decryptValue(token.getClaim(CLAIM));
     }
 

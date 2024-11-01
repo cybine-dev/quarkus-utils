@@ -4,6 +4,7 @@ import de.cybine.quarkus.util.api.permission.*;
 import io.quarkus.runtime.annotations.*;
 import io.smallrye.config.*;
 
+import java.time.*;
 import java.util.*;
 
 import static de.cybine.quarkus.util.FilePathHelper.*;
@@ -40,7 +41,7 @@ public interface ApiQueryConfig
     FilePaths paths( );
 
     /**
-     *
+     * Defines properties for the api-secret management
      */
     @WithName("secret")
     SecretProvider secretProvider();
@@ -65,33 +66,40 @@ public interface ApiQueryConfig
     interface SecretProvider
     {
         /**
-         *
+         * Sets if a security-identity is required to create and consume api-secrets
          */
         @WithDefault("false")
         @WithName("allow-empty-subject")
         boolean allowEmptySubject( );
 
         /**
-         *
+         * Sets how long a token is valid from the moment of creation onwards
+         */
+        @WithDefault("5m")
+        @WithName("token-validity")
+        Duration tokenValidity( );
+
+        /**
+         * Sets the cipher that is used to encrypt api-secrets
          */
         @WithName("symmetric.cipher")
         @WithDefault("AES/CBC/PKCS5Padding")
         String symmetricCipher( );
 
         /**
-         *
+         * Sets the passphrase that the symmetric key is derived from
          */
         @WithName("symmetric-key")
         Optional<String> symmetricKey( );
 
         /**
-         *
+         * Sets the path to the private ed25519 key that is used to temper-proof api-secrets
          */
         @WithName("asymmetric.private-key-path")
         Optional<String> privateKeyPath( );
 
         /**
-         *
+         * Sets the path to the public ed25519 key that is used to temper-proof api-secrets
          */
         @WithName("asymmetric.public-key-path")
         Optional<String> publicKeyPath( );
