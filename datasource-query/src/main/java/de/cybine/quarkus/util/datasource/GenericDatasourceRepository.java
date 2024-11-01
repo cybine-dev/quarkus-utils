@@ -35,6 +35,6 @@ public class GenericDatasourceRepository<T>
 
     public List<DatasourceCountInfo> fetchTotal(DatasourceQuery query)
     {
-        return DatasourceQueryInterpreter.of(this.type, query).executeCountQuery();
+        return DatasourceQueryInterpreter.of(this.type, query).executeCountQuery(query.getFields());
     }
 }

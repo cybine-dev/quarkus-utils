@@ -59,21 +59,19 @@ public class DatasourceQueryInterpreter<T>
             pagination.getOffset().ifPresent(typedQuery::setFirstResult);
 
             if (pagination.includeTotal())
-                pagination.setTotal(
-                        this.executeResultCountQuery(parameters, new HashSet<>(this.datasourceQuery.getFields())));
+                pagination.setTotal(this.executeResultCountQuery(parameters, new HashSet<>(fieldNames)));
         }
 
         return typedQuery;
     }
 
-    public List<DatasourceCountInfo> executeCountQuery( )
+    public List<DatasourceCountInfo> executeCountQuery(List<String> groupingFields)
     {
         CriteriaBuilder criteriaBuilder = this.entityManager.getCriteriaBuilder();
         CriteriaQuery<Object[]> query = criteriaBuilder.createQuery(Object[].class);
         Root<T> root = query.from(this.type);
 
-        List<String> groupingNames = this.datasourceQuery.getFields();
-        List<Path<?>> grouping = this.resolvePaths(root, groupingNames);
+        List<Path<?>> grouping = this.resolvePaths(root, groupingFields);
         List<Selection<?>> selection = new ArrayList<>();
         selection.add(criteriaBuilder.count(root));
         selection.addAll(grouping);
@@ -96,7 +94,7 @@ public class DatasourceQueryInterpreter<T>
                          .map(item -> DatasourceCountInfo.builder()
                                                          .count((long) item[ 0 ])
                                                          .groupKey(grouping.isEmpty() ? Collections.emptyMap() :
-                                                                 interconnectOptions(groupingNames,
+                                                                 interconnectOptions(groupingFields,
                                                                          Arrays.asList(item).subList(1, item.length)))
                                                          .build())
                          .toList();
@@ -223,15 +221,10 @@ public class DatasourceQueryInterpreter<T>
             pagination.getOffset().ifPresent(typedQuery::setFirstResult);
 
             if (pagination.includeTotal())
-                pagination.setTotal(this.executeResultCountQuery(parameters));
+                pagination.setTotal(this.executeResultCountQuery(parameters, Collections.emptySet()));
         }
 
         return typedQuery;
-    }
-
-    private Long executeResultCountQuery(List<BiTuple<String, Object>> parameters)
-    {
-        return this.executeResultCountQuery(parameters, Collections.emptySet());
     }
 
     private Long executeResultCountQuery(List<BiTuple<String, Object>> parameters, Set<String> properties)
@@ -254,7 +247,7 @@ public class DatasourceQueryInterpreter<T>
         TypedQuery<Long> typedQuery = this.entityManager.createQuery(query);
         parameters.forEach(parameter -> typedQuery.setParameter(parameter.first(), parameter.second()));
 
-        return typedQuery.getSingleResult();
+        return typedQuery.setMaxResults(1).getSingleResult();
     }
 
     private EntityGraph<T> getRelationGraph( )
